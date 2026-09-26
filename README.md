@@ -1,2 +1,2 @@
-# 2048++ v0.2.1
-Aligned fixed tiles, no spawn animation, merge shows new value immediately, Logo 2 app icon.
+# 2048++ v0.3
+Optimized board, persistent run history, records, milestone times, checkpoints. AUTO/COACH reserved for next versions.
