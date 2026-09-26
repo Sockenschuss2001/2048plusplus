@@ -1,2 +1,2 @@
-# 2048++ v0.2
-Blue UI, fixed 4x4 cells, sliding, merge/spawn animations, undo, preview, milestones and checkpoints.
+# 2048++ v0.2.1
+Aligned fixed tiles, no spawn animation, merge shows new value immediately, Logo 2 app icon.
