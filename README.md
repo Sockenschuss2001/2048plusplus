@@ -1,2 +1,5 @@
-# 2048++ v0.3.2
-Farbschemata Blau/Original/Dunkelblau; symmetrischer Spielfeldrand; breitere Score-Felder; kleineres unifarbenes Logo; abgestufte Farben für große Kacheln.
+# 2048++ v0.3.3
+- Korrektur des Spielfeldrahmens
+- Innenfläche von Grid und Kachel-Layer wird jetzt explizit auf allen vier Seiten um 9 px eingerückt
+- Oberer, unterer, linker und rechter Rand sind dadurch geometrisch identisch
+- Sonstige Funktionen aus v0.3.2 unverändert

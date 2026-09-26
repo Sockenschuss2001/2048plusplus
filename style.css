@@ -15,3 +15,31 @@ header{grid-template-columns:minmax(0,.92fr) minmax(96px,.54fr) minmax(96px,.54f
 body[data-theme="deepblue"]{--page:#eaf2f8;--ui:#326f98;--ui2:#66879e;--board:#7898ae;--cell:#b8ccd9;--t2:#e6f2fa;--t4:#cfe7f6;--t8:#a9d4ed;--t16:#7ebee2;--t32:#54a5d3;--t64:#318bc0;--t128:#2176aa;--t256:#176493;--t512:#10547d;--t1024:#0b4669;--t2048:#073a58;--t4096:#06334d;--t8192:#052b42;--t16384:#042438;--thi:#031e2e}
 body[data-theme="original"]{--page:#faf8ef;--ink:#776e65;--ui:#8f7a66;--ui2:#bbada0;--board:#bbada0;--cell:#cdc1b4;--t2:#eee4da;--t4:#ede0c8;--t8:#f2b179;--t16:#f59563;--t32:#f67c5f;--t64:#f65e3b;--t128:#edcf72;--t256:#edcc61;--t512:#edc850;--t1024:#edc53f;--t2048:#edc22e;--t4096:#d9a91d;--t8192:#c99115;--t16384:#b87b0e;--thi:#9f6507}
 @media(max-width:390px){header{grid-template-columns:minmax(0,.84fr) minmax(88px,.58fr) minmax(88px,.58fr)!important}.brand{font-size:27px!important}}
+
+/* v0.3.3 — exact symmetric board border */
+#game{
+  --edge:9px !important;
+  --gap:7px !important;
+  padding:0 !important;
+  position:relative;
+}
+#grid{
+  position:absolute !important;
+  top:var(--edge) !important;
+  right:var(--edge) !important;
+  bottom:var(--edge) !important;
+  left:var(--edge) !important;
+  width:auto !important;
+  height:auto !important;
+  grid-template-columns:repeat(4,minmax(0,1fr)) !important;
+  grid-template-rows:repeat(4,minmax(0,1fr)) !important;
+  gap:var(--gap) !important;
+}
+#tiles{
+  position:absolute !important;
+  top:var(--edge) !important;
+  right:var(--edge) !important;
+  bottom:var(--edge) !important;
+  left:var(--edge) !important;
+  inset:var(--edge) !important;
+}
