@@ -93,3 +93,50 @@ body:not([data-theme="original"]) .brand{background:var(--c15)!important}
 .undo-btn .undo-icon{display:block;width:32px;height:32px;fill:currentColor;flex:0 0 32px}
 .undo-btn{font-size:inherit!important;gap:4px!important}
 .undo-btn #undoCount{font-size:20px!important;font-weight:900!important}
+
+/* v0.3.8 classic-inspired harmonic palettes */
+body:not([data-theme="original"]):not([data-theme="deepblue"]) .v2{background:#e8f2f8!important;color:#385269!important}
+body:not([data-theme="original"]):not([data-theme="deepblue"]) .v4{background:#d8eaf4!important;color:#385269!important}
+body:not([data-theme="original"]):not([data-theme="deepblue"]) .v8{background:#afd5ea!important;color:#fff!important}
+body:not([data-theme="original"]):not([data-theme="deepblue"]) .v16{background:#8fc4e1!important;color:#fff!important}
+body:not([data-theme="original"]):not([data-theme="deepblue"]) .v32{background:#6eafd4!important;color:#fff!important}
+body:not([data-theme="original"]):not([data-theme="deepblue"]) .v64{background:#4e99c5!important;color:#fff!important}
+body:not([data-theme="original"]):not([data-theme="deepblue"]) .v128{background:#2f83b4!important;color:#fff!important}
+body:not([data-theme="original"]):not([data-theme="deepblue"]) .v256{background:#246f9f!important;color:#fff!important}
+body:not([data-theme="original"]):not([data-theme="deepblue"]) .v512{background:#1b608d!important;color:#fff!important}
+body:not([data-theme="original"]):not([data-theme="deepblue"]) .v1024{background:#14527a!important;color:#fff!important}
+body:not([data-theme="original"]):not([data-theme="deepblue"]) .v2048{background:#0d4569!important;color:#fff!important}
+body:not([data-theme="original"]):not([data-theme="deepblue"]) .v4096{background:#093a5a!important;color:#fff!important}
+body:not([data-theme="original"]):not([data-theme="deepblue"]) .v8192{background:#06304c!important;color:#fff!important}
+body:not([data-theme="original"]):not([data-theme="deepblue"]) .v16384{background:#04273f!important;color:#fff!important}
+body:not([data-theme="original"]):not([data-theme="deepblue"]) .high{background:#04273f!important;color:#fff!important}
+body[data-theme="deepblue"] .v2{background:#cbdde9!important;color:#243e54!important}
+body[data-theme="deepblue"] .v4{background:#b6d1e1!important;color:#243e54!important}
+body[data-theme="deepblue"] .v8{background:#82b5d1!important;color:#fff!important}
+body[data-theme="deepblue"] .v16{background:#619fc2!important;color:#fff!important}
+body[data-theme="deepblue"] .v32{background:#4389b0!important;color:#fff!important}
+body[data-theme="deepblue"] .v64{background:#2d739d!important;color:#fff!important}
+body[data-theme="deepblue"] .v128{background:#1d608b!important;color:#fff!important}
+body[data-theme="deepblue"] .v256{background:#164f77!important;color:#fff!important}
+body[data-theme="deepblue"] .v512{background:#103f63!important;color:#fff!important}
+body[data-theme="deepblue"] .v1024{background:#0b3454!important;color:#fff!important}
+body[data-theme="deepblue"] .v2048{background:#072a46!important;color:#fff!important}
+body[data-theme="deepblue"] .v4096{background:#05223a!important;color:#fff!important}
+body[data-theme="deepblue"] .v8192{background:#031b30!important;color:#fff!important}
+body[data-theme="deepblue"] .v16384{background:#021626!important;color:#fff!important}
+body[data-theme="deepblue"] .high{background:#021626!important;color:#fff!important}
+body[data-theme="original"] .v2{background:#eee4da!important;color:#776e65!important}
+body[data-theme="original"] .v4{background:#ede0c8!important;color:#776e65!important}
+body[data-theme="original"] .v8{background:#f2b179!important;color:#fff!important}
+body[data-theme="original"] .v16{background:#f59563!important;color:#fff!important}
+body[data-theme="original"] .v32{background:#f67c5f!important;color:#fff!important}
+body[data-theme="original"] .v64{background:#f65e3b!important;color:#fff!important}
+body[data-theme="original"] .v128{background:#edcf72!important;color:#fff!important}
+body[data-theme="original"] .v256{background:#edcc61!important;color:#fff!important}
+body[data-theme="original"] .v512{background:#edc850!important;color:#fff!important}
+body[data-theme="original"] .v1024{background:#edc53f!important;color:#fff!important}
+body[data-theme="original"] .v2048{background:#edc22e!important;color:#fff!important}
+body[data-theme="original"] .v4096{background:#e9b91e!important;color:#fff!important}
+body[data-theme="original"] .v8192{background:#dfa916!important;color:#fff!important}
+body[data-theme="original"] .v16384{background:#d49a10!important;color:#fff!important}
+body[data-theme="original"] .high{background:#d49a10!important;color:#fff!important}
