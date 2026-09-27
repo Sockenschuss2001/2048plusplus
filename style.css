@@ -155,3 +155,12 @@ nav{grid-template-columns:82px minmax(0,1fr) minmax(0,1fr) 54px!important}
 .setting-row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:9px 0}
 .setting-row select{min-width:150px}
 #preview:disabled{opacity:.45}
+
+/* v0.4.1 — milestones & records */
+.milestone-summary{display:flex;gap:10px;margin:8px 0 10px}
+.milestone-summary span{flex:1;background:rgba(255,255,255,.55);padding:9px 10px;border-radius:10px;text-align:center}
+.milestone-table{display:grid;gap:6px;margin-bottom:12px}
+.ms-row{display:grid;grid-template-columns:58px 22px 54px 54px 1fr;align-items:center;gap:5px;padding:8px 9px;border-radius:10px;background:rgba(255,255,255,.38);font-size:13px}
+.ms-row.hit{background:rgba(255,255,255,.68)}
+.ms-row>b{font-size:15px}.ms-row small{text-align:right;opacity:.82;font-size:11px}
+@media(max-width:390px){.ms-row{grid-template-columns:52px 18px 48px 48px 1fr;padding:7px 6px;gap:3px}.ms-row small{font-size:10px}}

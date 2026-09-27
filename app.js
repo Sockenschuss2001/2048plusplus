@@ -25,9 +25,31 @@ function stats(){REC.bestScore=Math.max(REC.bestScore,S.score);REC.bestTile=Math
 let freeNow=empty(S.b).length, nextEnabled=NEXTLIMIT>0&&freeNow<=NEXTLIMIT;
 $("#nextCard").classList.toggle("hidden",NEXTLIMIT===0);
 $("#preview").disabled=!nextEnabled;
-$("#next").textContent=nextEnabled?preview():"";let a=Object.entries(S.marks);$("#marks").innerHTML=a.length?a.map(([k,v])=>`<div class=r><b>${k}</b><span>${fmt(v.t)} · Zug ${v.m}</span></div>`).join(""):"Noch keine.";let c=Object.keys(CP).map(Number).sort((a,b)=>a-b);$("#cps").innerHTML=c.length?c.map(k=>`<div class=r><b>${k}</b><button onclick=startCP(${k})>Ab hier</button></div>`).join(""):"Noch keine.";$("#records").innerHTML=`<div class=r><b>Höchste Kachel</b><span>${REC.bestTile||"-"}</span></div><div class=r><b>Höchster Score</b><span>${REC.bestScore}</span></div>`;$("#runs").innerHTML=RUNS.length?RUNS.slice(0,12).map(r=>`<div class=r><b>${r.tile} · ${r.score}</b><span>${fmt(r.time)} · ${r.moves} Züge</span></div>`).join(""):"Noch keine abgeschlossenen Runs."}
+$("#next").textContent=nextEnabled?preview():"";renderMilestones();let a=Object.entries(S.marks);$("#marks").innerHTML=a.length?a.map(([k,v])=>`<div class=r><b>${k}</b><span>${fmt(v.t)} · Zug ${v.m}</span></div>`).join(""):"Noch keine.";let c=Object.keys(CP).map(Number).sort((a,b)=>a-b);$("#cps").innerHTML=c.length?c.map(k=>`<div class=r><b>${k}</b><button onclick=startCP(${k})>Ab hier</button></div>`).join(""):"Noch keine.";$("#records").innerHTML=`<div class=r><b>Höchste Kachel</b><span>${REC.bestTile||"-"}</span></div><div class=r><b>Höchster Score</b><span>${REC.bestScore}</span></div>`;$("#runs").innerHTML=RUNS.length?RUNS.slice(0,12).map(r=>`<div class=r><b>${r.tile} · ${r.score}</b><span>${fmt(r.time)} · ${r.moves} Züge</span></div>`).join(""):"Noch keine abgeschlossenen Runs."}
 window.startCP=k=>{S=clone(CP[k]);S.start=Date.now();S.startTile=+k;S.moves=0;S.score=0;S.marks={};S.undoCredits=0;S.ended=false;H=[];$("#gameover").classList.add("hidden");renderBoard()};
-$("#gameover-new").onclick=()=>newGame();document.addEventListener("selectstart",e=>{if(!e.target.closest("input,textarea"))e.preventDefault()});document.addEventListener("contextmenu",e=>{if(e.target.closest("#game,header,nav,.stats,.next"))e.preventDefault()});$("#preview").value=["off","value","full"].includes(PREF)?PREF:"off";
+$("#gameover-new").onclick=()=>newGame();document.addEventListener("selectstart",e=>{if(!e.target.closest("input,textarea"))e.preventDefault()});document.addEventListener("contextmenu",e=>{if(e.target.closest("#game,header,nav,.stats,.next"))e.preventDefault()});
+function fmtMilestoneTime(ms){
+  if(ms==null)return "—";
+  let sec=Math.floor(ms/1000),m=Math.floor(sec/60),s=sec%60;
+  return `${m}:${String(s).padStart(2,"0")}`;
+}
+function renderMilestones(){
+  let box=$("#milestoneTable"); if(!box)return;
+  let max=Math.max(2048,maxTile(),...Object.keys(S.marks||{}).map(Number),...Object.keys(REC.fastest||{}).map(Number));
+  let vals=[]; for(let v=128;v<=Math.max(max,128);v*=2) vals.push(v);
+  $("#milestoneCount").textContent=Object.keys(S.marks||{}).length;
+  $("#milestoneUndo").textContent=S.undoCredits||0;
+  box.innerHTML=vals.map(v=>{
+    let hit=S.marks&&S.marks[v], ft=REC.fastest&&REC.fastest[v], fm=REC.fewest&&REC.fewest[v];
+    return `<div class="ms-row ${hit?"hit":""}">
+      <b>${v}</b><span>${hit?"✓":"○"}</span>
+      <span>${hit?fmtMilestoneTime(hit.t):"—"}</span>
+      <span>${hit?hit.m+" Z.":"—"}</span>
+      <small>Best ${ft!=null?fmtMilestoneTime(ft):"—"} · ${fm!=null?fm+" Z.":"—"}</small>
+    </div>`;
+  }).join("");
+}
+$("#preview").value=["off","value","full"].includes(PREF)?PREF:"off";
 $("#slideSpeed").value=String([90,140,220].includes(SLIDE)?SLIDE:140);
 $("#nextLimit").value=String([0,4,6,8,16].includes(NEXTLIMIT)?NEXTLIMIT:0);
 $("#slideSpeed").onchange=e=>{SLIDE=+e.target.value;localStorage.setItem("2048pp_slide",SLIDE)};
