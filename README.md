@@ -1,5 +1,7 @@
-# 2048++ v0.3.3
-- Korrektur des Spielfeldrahmens
-- Innenfläche von Grid und Kachel-Layer wird jetzt explizit auf allen vier Seiten um 9 px eingerückt
-- Oberer, unterer, linker und rechter Rand sind dadurch geometrisch identisch
-- Sonstige Funktionen aus v0.3.2 unverändert
+# 2048++ v0.3.4
+- Versehentliche Textauswahl/Long-Press-Menüs beim Spielen unterdrückt
+- Game-over-Erkennung, wenn kein Zug mehr möglich ist
+- Game-over-Overlay mit Endstand und „Neues Spiel“
+- Beendete Runs werden in der Run-Historie gespeichert
+- Animierte +Punkte-Anzeige am SCORE-Feld pro Zug
+- Basis: v0.3.3 inklusive korrigiertem symmetrischem Spielfeldrand

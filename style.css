@@ -43,3 +43,22 @@ body[data-theme="original"]{--page:#faf8ef;--ink:#776e65;--ui:#8f7a66;--ui2:#bba
   left:var(--edge) !important;
   inset:var(--edge) !important;
 }
+
+/* v0.3.4 */
+html,body,#app,main,#game,#grid,#tiles,.tile,.cell,header,nav,.stats,.next,.brand,.score,button,select,aside{
+  -webkit-user-select:none!important; user-select:none!important;
+  -webkit-touch-callout:none!important;
+}
+#game{touch-action:none!important}
+.score{position:relative;overflow:visible}
+.score-pop{
+  position:absolute;left:50%;bottom:-2px;transform:translate(-50%,0);
+  font-size:18px;font-weight:900;color:#fff;pointer-events:none;
+  animation:scorePop .62s ease-out forwards;z-index:20;text-shadow:0 1px 2px rgba(0,0,0,.18)
+}
+@keyframes scorePop{0%{opacity:0;transform:translate(-50%,6px) scale(.8)}18%{opacity:1;transform:translate(-50%,0) scale(1.08)}100%{opacity:0;transform:translate(-50%,-27px) scale(1)}}
+.gameover{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;background:rgba(20,43,60,.48);padding:24px}
+.gameover.hidden{display:none!important}
+.gameover-card{width:min(330px,88vw);background:var(--page);color:var(--ink);border-radius:22px;padding:28px 22px;text-align:center;box-shadow:0 18px 55px rgba(0,0,0,.25)}
+.gameover-card h2{font-size:34px;margin:0 0 10px}.gameover-card #gameover-score{font-size:20px;font-weight:700;margin-bottom:20px}
+.gameover-card button{border:0;border-radius:14px;padding:14px 22px;background:var(--ui);color:#fff;font-size:18px;font-weight:800;width:100%}
