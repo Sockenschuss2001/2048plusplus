@@ -87,3 +87,9 @@ body:not([data-theme="original"]) .brand{background:var(--c15)!important}
 .undo-btn::before{content:"";display:block;width:27px;height:22px;background:currentColor;clip-path:polygon(0 50%,42% 0,42% 28%,72% 28%,88% 39%,100% 58%,92% 78%,78% 91%,78% 68%,68% 57%,42% 57%,42% 100%);transform:scaleX(-1)}
 .undo-btn #undoCount{font-size:18px!important;line-height:1!important;min-width:12px}
 .undo-btn:disabled{opacity:.38}
+
+/* v0.3.7 — corrected undo glyph */
+.undo-btn::before{display:none!important;content:none!important}
+.undo-btn .undo-icon{display:block;width:32px;height:32px;fill:currentColor;flex:0 0 32px}
+.undo-btn{font-size:inherit!important;gap:4px!important}
+.undo-btn #undoCount{font-size:20px!important;font-weight:900!important}
