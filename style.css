@@ -140,3 +140,9 @@ body[data-theme="original"] .v4096{background:#e9b91e!important;color:#fff!impor
 body[data-theme="original"] .v8192{background:#dfa916!important;color:#fff!important}
 body[data-theme="original"] .v16384{background:#d49a10!important;color:#fff!important}
 body[data-theme="original"] .high{background:#d49a10!important;color:#fff!important}
+
+/* v0.3.9 */
+nav{grid-template-columns:64px minmax(0,1fr) minmax(0,1fr) 48px!important}
+.undo-btn{min-width:64px!important}
+.tile.v2048,.tile.v4096,.tile.v8192{font-size:clamp(24px,7vw,35px)!important;letter-spacing:-1px}
+.tile.v16384,.tile.high{font-size:clamp(20px,6vw,31px)!important;letter-spacing:-1.2px}
