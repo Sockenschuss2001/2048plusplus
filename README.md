@@ -1,7 +1,8 @@
-# 2048++ v0.3.4
-- Versehentliche Textauswahl/Long-Press-Menüs beim Spielen unterdrückt
-- Game-over-Erkennung, wenn kein Zug mehr möglich ist
-- Game-over-Overlay mit Endstand und „Neues Spiel“
-- Beendete Runs werden in der Run-Historie gespeichert
-- Animierte +Punkte-Anzeige am SCORE-Feld pro Zug
-- Basis: v0.3.3 inklusive korrigiertem symmetrischem Spielfeldrand
+# 2048++ v0.3.6
+- Undo immer genau 1 Zug
+- Jeder neu erreichte Meilenstein im aktuellen Run gibt +1 Undo-Guthaben
+- Guthaben kann für mehrere einzelne Undos direkt hintereinander verwendet werden
+- Undo eines Zuges nimmt einen bereits verdienten Meilenstein nicht zurück
+- 5er- und 10er-Undo entfernt
+- Deutlich größerer/breiter Undo-Pfeil (Vorschlag 3) mit sichtbarem Restguthaben
+- Checkpoint-Start beginnt mit 0 Undo-Guthaben
