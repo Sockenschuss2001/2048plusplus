@@ -146,3 +146,12 @@ nav{grid-template-columns:64px minmax(0,1fr) minmax(0,1fr) 48px!important}
 .undo-btn{min-width:64px!important}
 .tile.v2048,.tile.v4096,.tile.v8192{font-size:clamp(24px,7vw,35px)!important;letter-spacing:-1px}
 .tile.v16384,.tile.high{font-size:clamp(20px,6vw,31px)!important;letter-spacing:-1.2px}
+
+/* v0.4.0 */
+nav{grid-template-columns:82px minmax(0,1fr) minmax(0,1fr) 54px!important}
+.undo-btn{min-width:82px!important}
+#menu{font-size:29px!important;font-weight:900!important;line-height:1!important;padding:0!important}
+.next.hidden{display:none!important}
+.setting-row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:9px 0}
+.setting-row select{min-width:150px}
+#preview:disabled{opacity:.45}

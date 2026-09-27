@@ -1,9 +1,8 @@
-# 2048++ v0.3.9
-- Neues Home-Screen-Icon mit 2048++ statt generischer „2“
-- 2048 und größere Kacheln mit kleinerer Schrift
-- Undo-Feld breiter
-- NEXT bei echtem Erststart standardmäßig Aus
-- Farbschema bei echtem Erststart standardmäßig Dunkelblau
-- „Original“ in „Standard“ umbenannt
-- Versionsnummer nur noch im Menü
-- Bestehende gespeicherte NEXT-/Theme-Einstellungen werden absichtlich nicht überschrieben
+# 2048++ v0.4.0
+- Slide-Geschwindigkeit: Schnell (90 ms), Normal (140 ms), Langsam (220 ms), persistent
+- NEXT-Hilfe: Ausblenden / ≤4 / ≤6 / ≤8 freie Felder / Immer, persistent
+- NEXT-Vorschau ist nur aktiv, wenn der gewählte Freifeld-Grenzwert erreicht ist
+- Undo-Feld nochmals breiter
+- Menüsymbol deutlich größer
+- Zusätzliche favicon-/manifest-Icon-Hinweise als Firefox-Fallback
+- Safari/apple-touch-icon bleibt explizit gesetzt
