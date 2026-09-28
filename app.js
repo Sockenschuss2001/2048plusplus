@@ -18,7 +18,7 @@ function animate(q){let old=new Map([...$("#tiles").children].map(x=>[+x.dataset
 function maxTile(){return Math.max(...S.b.flat().map(x=>x.v))}
 function milestones(){let m=maxTile();for(let p=128;p<=m;p*=2)if(!S.marks[p]){let x={t:Date.now()-S.start,m:S.moves};S.marks[p]=x;S.undoCredits=(S.undoCredits||0)+1;CP[p]=clone(S);if(!REC.fastest[p]||x.t<REC.fastest[p])REC.fastest[p]=x.t;if(!REC.fewest[p]||x.m<REC.fewest[p])REC.fewest[p]=x.m;REC.bestTile=Math.max(REC.bestTile,p);save("cp",CP);save("records",REC)}}
 function go(d){if(lock)return;let q=move(S,d);if(!q)return;lock=1;H.push(clone(S));if(H.length>200)H.shift();animate(q)}
-window.undo=()=>{if(lock||!H.length||(S.undoCredits||0)<=0)return;let credits=S.undoCredits-1,marks=S.marks,ended=S.ended;S=H.pop();S.undoCredits=credits;S.marks=marks;S.ended=false;$("#gameover").classList.add("hidden");renderBoard()};window.newGame=()=>{if(S&&S.moves>0&&!S.runSaved)finishRun();S=fresh();H=[];$("#gameover").classList.add("hidden");renderBoard()}
+window.undo=()=>{if(lock||!H.length||(S.undoCredits||0)<=0)return;let credits=S.undoCredits-1,marks=S.marks,ended=S.ended;S=H.pop();S.undoCredits=credits;S.marks=marks;S.ended=false;$("#gameover").classList.add("hidden");renderBoard()};window.newGame=()=>{if(PAUSED)setPaused(false);if(S&&S.moves>0&&!S.runSaved)finishRun();S=fresh();H=[];$("#gameover").classList.add("hidden");renderBoard()}
 function fmt(x){let s=x/1000|0,h=s/3600|0,m=(s%3600)/60|0,ss=s%60;return(h?h+":":"")+String(m).padStart(2,"0")+":"+String(ss).padStart(2,"0")}
 function preview(){let mode=$("#preview").value,free=empty(S.b).length;if(!NEXTLIMIT||free>NEXTLIMIT||mode=="off")return"";if(mode=="value"){let q=clone(S.rng);return"Nächster Wert: "+(rnd(q)<.9?2:4)}let out=[],sy={L:"←",R:"→",U:"↑",D:"↓"};for(let d of["L","R","U","D"]){let z=move(S,d);if(!z)continue;let e=empty(z.n.b),q=clone(z.n.rng),p=e[Math.floor(rnd(q)*e.length)],v=rnd(q)<.9?2:4;out.push(`${sy[d]} ${v} @ ${String.fromCharCode(65+p[1])}${p[0]+1}`)}return out.join(" · ")}
 function stats(){REC.bestScore=Math.max(REC.bestScore,S.score);REC.bestTile=Math.max(REC.bestTile,maxTile());save("records",REC);$("#score").textContent=S.score;$("#best").textContent=REC.bestScore;$("#moves").textContent=S.moves;let ub=$("#undoBtn"),uc=S.undoCredits||0;$("#undoCount").textContent=uc;ub.disabled=!H.length||uc<=0;$("#free").textContent=empty(S.b).length;let mx=maxTile(),g=128;while(g<=mx)g*=2;$("#goal").textContent=g;
@@ -26,7 +26,7 @@ let freeNow=empty(S.b).length, nextEnabled=NEXTLIMIT>0&&freeNow<=NEXTLIMIT;
 $("#nextCard").classList.toggle("hidden",NEXTLIMIT===0);
 $("#preview").disabled=!nextEnabled;
 $("#next").textContent=nextEnabled?preview():"";renderMilestones();renderHistory();renderCoach();let a=Object.entries(S.marks);$("#marks").innerHTML=a.length?a.map(([k,v])=>`<div class=r><b>${k}</b><span>${fmt(v.t)} · Zug ${v.m}</span></div>`).join(""):"Noch keine.";let c=Object.keys(CP).map(Number).sort((a,b)=>a-b);$("#cps").innerHTML=c.length?c.map(k=>`<div class=r><b>${k}</b><button onclick=startCP(${k})>Ab hier</button></div>`).join(""):"Noch keine.";$("#records").innerHTML=`<div class=r><b>Höchste Kachel</b><span>${REC.bestTile||"-"}</span></div><div class=r><b>Höchster Score</b><span>${REC.bestScore}</span></div>`;$("#runs").innerHTML=RUNS.length?RUNS.slice(0,12).map(r=>`<div class=r><b>${r.tile} · ${r.score}</b><span>${fmt(r.time)} · ${r.moves} Züge</span></div>`).join(""):"Noch keine abgeschlossenen Runs."}
-window.startCP=k=>{if(S&&S.moves>0&&!S.runSaved)finishRun();S=clone(CP[k]);S.start=Date.now();S.startTile=+k;S.moves=0;S.score=0;S.marks={};S.undoCredits=0;S.ended=false;S.runSaved=false;H=[];$("#gameover").classList.add("hidden");renderBoard()};
+window.startCP=k=>{if(PAUSED)setPaused(false);if(S&&S.moves>0&&!S.runSaved)finishRun();S=clone(CP[k]);S.start=Date.now();S.startTile=+k;S.moves=0;S.score=0;S.marks={};S.undoCredits=0;S.ended=false;S.runSaved=false;H=[];$("#gameover").classList.add("hidden");renderBoard()};
 $("#gameover-new").onclick=()=>newGame();document.addEventListener("selectstart",e=>{if(!e.target.closest("input,textarea"))e.preventDefault()});document.addEventListener("contextmenu",e=>{if(e.target.closest("#game,header,nav,.stats,.next"))e.preventDefault()});
 
 
@@ -135,7 +135,18 @@ function renderMilestones(){
     </div>`;
   }).join("");
 }
-$("#resetAll").onclick=()=>{if(confirm("Wirklich ALLES zurücksetzen?\\n\\nSpielhistorie, Rekorde, Checkpoints, Spielstand und Einstellungen werden gelöscht.")&&confirm("Letzte Bestätigung: Alle lokalen 2048++-Daten endgültig löschen?")){Object.keys(localStorage).filter(k=>k.startsWith("2048pp")).forEach(k=>localStorage.removeItem(k));location.reload()}};
+let PAUSED=false,PAUSE_AT=0;
+function setPaused(v){
+  if(v===PAUSED)return;
+  if(v){PAUSED=true;PAUSE_AT=Date.now()}
+  else{if(PAUSE_AT)S.start+=Date.now()-PAUSE_AT;PAUSED=false;PAUSE_AT=0}
+  $("#pauseOverlay").classList.toggle("hidden",!PAUSED);
+  $("#pauseBtn").classList.toggle("active",PAUSED);
+  $("#pauseBtn").textContent=PAUSED?"▶":"Ⅱ";
+}
+$("#pauseBtn").onclick=()=>setPaused(!PAUSED);
+$("#pauseOverlay").onclick=()=>setPaused(false);
+$("#resetAll").onclick=()=>{if(confirm("Wirklich ALLES zurücksetzen?\n\nSpielhistorie, Rekorde, Checkpoints, Spielstand und Einstellungen werden gelöscht.")&&confirm("Letzte Bestätigung: Alle lokalen 2048++-Daten endgültig löschen?")){Object.keys(localStorage).filter(k=>k.startsWith("2048pp")).forEach(k=>localStorage.removeItem(k));location.reload()}};
 $("#clearHistory").onclick=()=>{if(confirm("Spielhistorie wirklich löschen?")){RUNS=[];save("runs",RUNS);renderHistory()}};
 $("#coachBtn").onclick=()=>{COACH=!COACH;localStorage.setItem("2048pp_coach",COACH?"1":"0");renderCoach()};
 $("#preview").value=["off","value","full"].includes(PREF)?PREF:"off";
@@ -145,4 +156,4 @@ $("#slideSpeed").onchange=e=>{SLIDE=+e.target.value;localStorage.setItem("2048pp
 $("#nextLimit").onchange=e=>{NEXTLIMIT=+e.target.value;localStorage.setItem("2048pp_nextlimit",NEXTLIMIT);stats()};$("#preview").onchange=e=>{localStorage.setItem("2048pp_preview",e.target.value);stats()};$("#menu").onclick=()=>{$("#panel").classList.remove("hidden");stats()};$("#close").onclick=()=>$("#panel").classList.add("hidden");
 function setTheme(t){THEME=["blue","original","deepblue"].includes(t)?t:"deepblue";document.body.dataset.theme=THEME;localStorage.setItem("2048pp_theme",THEME);document.querySelectorAll(".theme-btn").forEach(b=>b.classList.toggle("active",b.dataset.theme===THEME))}
 setTheme(THEME);document.querySelectorAll(".theme-btn").forEach(b=>b.onclick=()=>setTheme(b.dataset.theme));
-for(let i=0;i<16;i++){let e=document.createElement("div");e.className="cell";$("#grid").appendChild(e)}let x,y,G=$("#game");G.ontouchstart=e=>{x=e.touches[0].clientX;y=e.touches[0].clientY};G.ontouchend=e=>{let X=e.changedTouches[0].clientX-x,Y=e.changedTouches[0].clientY-y;if(Math.max(Math.abs(X),Math.abs(Y))<22)return;go(Math.abs(X)>Math.abs(Y)?(X>0?"R":"L"):(Y>0?"D":"U"))};S=fresh();requestAnimationFrame(renderBoard);addEventListener("resize",()=>requestAnimationFrame(renderBoard));setInterval(()=>$("#time").textContent=fmt(Date.now()-S.start),1000);if("serviceWorker"in navigator)navigator.serviceWorker.register("sw.js");
+for(let i=0;i<16;i++){let e=document.createElement("div");e.className="cell";$("#grid").appendChild(e)}let x,y,G=$("#game");G.ontouchstart=e=>{if(PAUSED)return;x=e.touches[0].clientX;y=e.touches[0].clientY};G.ontouchend=e=>{if(PAUSED)return;let X=e.changedTouches[0].clientX-x,Y=e.changedTouches[0].clientY-y;if(Math.max(Math.abs(X),Math.abs(Y))<22)return;go(Math.abs(X)>Math.abs(Y)?(X>0?"R":"L"):(Y>0?"D":"U"))};S=fresh();requestAnimationFrame(renderBoard);addEventListener("resize",()=>requestAnimationFrame(renderBoard));setInterval(()=>$("#time").textContent=fmt(Date.now()-S.start),1000);if("serviceWorker"in navigator)navigator.serviceWorker.register("sw.js");

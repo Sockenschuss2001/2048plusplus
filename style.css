@@ -189,3 +189,13 @@ nav{grid-template-columns:82px minmax(0,1fr) minmax(0,1fr) 54px!important}
 #coachWhy{display:block;margin-top:7px;text-align:center;opacity:.75}
 
 .reset-all{width:100%;margin-top:4px;background:#8b4b4b!important;color:#fff!important}.reset-note{display:block;margin:7px 2px 18px;opacity:.65;line-height:1.35}
+
+/* v0.5.3 — pause */
+nav{grid-template-columns:82px minmax(0,1fr) minmax(0,1fr) 52px 52px!important}
+#pauseBtn{font-size:24px!important;font-weight:900!important;padding:0!important}
+#pauseBtn.active{filter:brightness(1.08);box-shadow:inset 0 0 0 3px rgba(255,255,255,.55)}
+.pause-overlay{position:absolute;inset:0;z-index:50;border-radius:inherit;background:rgba(235,243,248,.72);display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--ink);backdrop-filter:blur(1.5px);-webkit-backdrop-filter:blur(1.5px)}
+.pause-overlay.hidden{display:none!important}
+.pause-overlay b{font-size:30px;letter-spacing:2px}
+.pause-overlay small{margin-top:7px;font-size:13px;font-weight:700}
+@media(max-width:390px){nav{grid-template-columns:76px minmax(0,1fr) minmax(0,1fr) 48px 48px!important}}
