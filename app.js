@@ -135,10 +135,11 @@ function renderMilestones(){
     </div>`;
   }).join("");
 }
+$("#resetAll").onclick=()=>{if(confirm("Wirklich ALLES zurücksetzen?\\n\\nSpielhistorie, Rekorde, Checkpoints, Spielstand und Einstellungen werden gelöscht.")&&confirm("Letzte Bestätigung: Alle lokalen 2048++-Daten endgültig löschen?")){Object.keys(localStorage).filter(k=>k.startsWith("2048pp")).forEach(k=>localStorage.removeItem(k));location.reload()}};
 $("#clearHistory").onclick=()=>{if(confirm("Spielhistorie wirklich löschen?")){RUNS=[];save("runs",RUNS);renderHistory()}};
 $("#coachBtn").onclick=()=>{COACH=!COACH;localStorage.setItem("2048pp_coach",COACH?"1":"0");renderCoach()};
 $("#preview").value=["off","value","full"].includes(PREF)?PREF:"off";
-$("#slideSpeed").value=String([90,140,220].includes(SLIDE)?SLIDE:140);
+$("#slideSpeed").value=String([50,90,140,220].includes(SLIDE)?SLIDE:140);
 $("#nextLimit").value=String([0,4,6,8,16].includes(NEXTLIMIT)?NEXTLIMIT:0);
 $("#slideSpeed").onchange=e=>{SLIDE=+e.target.value;localStorage.setItem("2048pp_slide",SLIDE)};
 $("#nextLimit").onchange=e=>{NEXTLIMIT=+e.target.value;localStorage.setItem("2048pp_nextlimit",NEXTLIMIT);stats()};$("#preview").onchange=e=>{localStorage.setItem("2048pp_preview",e.target.value);stats()};$("#menu").onclick=()=>{$("#panel").classList.remove("hidden");stats()};$("#close").onclick=()=>$("#panel").classList.add("hidden");

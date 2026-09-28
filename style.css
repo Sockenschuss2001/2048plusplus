@@ -187,3 +187,5 @@ nav{grid-template-columns:82px minmax(0,1fr) minmax(0,1fr) 54px!important}
 .coach-move b{font-size:25px;line-height:1}.coach-move span{font-size:10px;margin-top:4px}
 .coach-move.best{background:var(--ui);color:#fff}
 #coachWhy{display:block;margin-top:7px;text-align:center;opacity:.75}
+
+.reset-all{width:100%;margin-top:4px;background:#8b4b4b!important;color:#fff!important}.reset-note{display:block;margin:7px 2px 18px;opacity:.65;line-height:1.35}

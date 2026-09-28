@@ -1,2 +1,2 @@
-# 2048++ v0.5.1
-Konsolidierter Bugfix aus v0.4.2/v0.5.0: Historie bleibt erhalten; fehlerhafte Meilenstein-Rekorde werden bereinigt; aktueller Lauf, historische Rekorde und Checkpoints werden getrennt; Checkpoint-Wechsel sichert laufende Spiele; COACH bleibt erhalten.
+# 2048++ v0.5.2
+Sehr schnell (50 ms) ergänzt. Vollständiger Reset mit doppelter Sicherheitsabfrage löscht alle lokalen 2048++-Daten und stellt Erststart-Defaults wieder her.
