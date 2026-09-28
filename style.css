@@ -164,3 +164,14 @@ nav{grid-template-columns:82px minmax(0,1fr) minmax(0,1fr) 54px!important}
 .ms-row.hit{background:rgba(255,255,255,.68)}
 .ms-row>b{font-size:15px}.ms-row small{text-align:right;opacity:.82;font-size:11px}
 @media(max-width:390px){.ms-row{grid-template-columns:52px 18px 48px 48px 1fr;padding:7px 6px;gap:3px}.ms-row small{font-size:10px}}
+
+/* v0.4.2 — run history */
+.history-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:8px 0}
+.history-summary span{background:rgba(255,255,255,.55);padding:8px 5px;border-radius:9px;text-align:center;font-size:11px}
+.history-summary b{display:block;font-size:15px}
+.run-history{display:grid;gap:6px;max-height:310px;overflow:auto;-webkit-overflow-scrolling:touch}
+.run-row{display:grid;grid-template-columns:1.15fr 1fr .65fr .75fr;gap:5px;align-items:center;padding:8px;background:rgba(255,255,255,.45);border-radius:10px;font-size:11px}
+.run-row>div{display:flex;flex-direction:column}.run-row>div>b{font-size:17px}.run-row small{opacity:.75}
+.run-row>small{grid-column:1/-1}
+.history-empty{padding:12px;text-align:center;opacity:.65}
+.danger-lite{width:100%;margin:8px 0 12px;opacity:.8}

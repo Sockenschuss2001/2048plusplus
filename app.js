@@ -13,21 +13,46 @@ function place(e,r,c,g){let p=g[r*4+c];e.style.left=p.x+"px";e.style.top=p.y+"px
 function renderBoard(){let L=$("#tiles"),g=geom();L.innerHTML="";for(let r=0;r<4;r++)for(let c=0;c<4;c++){let q=S.b[r][c];if(!q.v)continue;let e=document.createElement("div");e.dataset.id=q.id;e.className=`tile ${q.v<=16384?"v"+q.v:"high"}`;e.textContent=q.v;place(e,r,c,g);L.appendChild(e)}stats()}
 function canMove(){for(let d of["L","R","U","D"])if(move(S,d))return true;return false}
 function scorePop(gain){if(!gain)return;let box=$("#score").parentElement,e=document.createElement("div");e.className="score-pop";e.textContent="+"+gain;box.appendChild(e);setTimeout(()=>e.remove(),700)}
-function showGameOver(){if(S.ended)return;S.ended=true;RUNS.unshift({tile:maxTile(),score:S.score,time:Date.now()-S.start,moves:S.moves,startTile:S.startTile||2});RUNS=RUNS.slice(0,100);save("runs",RUNS);$("#gameover-score").textContent=`Score ${S.score} · ${S.moves} Züge`;$("#gameover").classList.remove("hidden");stats()}
+function showGameOver(){if(S.ended)return;S.ended=true;finishRun();$("#gameover-score").textContent=`Score ${S.score} · ${S.moves} Züge`;$("#gameover").classList.remove("hidden");stats()}
 function animate(q){let old=new Map([...$("#tiles").children].map(x=>[+x.dataset.id,x])),g=geom();for(let m of q.anim){let e=old.get(m.id);if(!e)continue;if(m.merge){e.textContent=m.target;e.className=`tile ${m.target<=16384?"v"+m.target:"high"}`}place(e,m.r,m.c,g)}setTimeout(()=>{S=q.n;spawn(S);milestones();renderBoard();scorePop(q.gain);lock=0;if(!canMove())showGameOver()},SLIDE)}
 function maxTile(){return Math.max(...S.b.flat().map(x=>x.v))}
 function milestones(){let m=maxTile();for(let p=128;p<=m;p*=2)if(!S.marks[p]){let x={t:Date.now()-S.start,m:S.moves};S.marks[p]=x;S.undoCredits=(S.undoCredits||0)+1;CP[p]=clone(S);if(!REC.fastest[p]||x.t<REC.fastest[p])REC.fastest[p]=x.t;if(!REC.fewest[p]||x.m<REC.fewest[p])REC.fewest[p]=x.m;REC.bestTile=Math.max(REC.bestTile,p);save("cp",CP);save("records",REC)}}
 function go(d){if(lock)return;let q=move(S,d);if(!q)return;lock=1;H.push(clone(S));if(H.length>200)H.shift();animate(q)}
-window.undo=()=>{if(lock||!H.length||(S.undoCredits||0)<=0)return;let credits=S.undoCredits-1,marks=S.marks,ended=S.ended;S=H.pop();S.undoCredits=credits;S.marks=marks;S.ended=false;$("#gameover").classList.add("hidden");renderBoard()};window.newGame=()=>{S=fresh();H=[];$("#gameover").classList.add("hidden");renderBoard()}
+window.undo=()=>{if(lock||!H.length||(S.undoCredits||0)<=0)return;let credits=S.undoCredits-1,marks=S.marks,ended=S.ended;S=H.pop();S.undoCredits=credits;S.marks=marks;S.ended=false;$("#gameover").classList.add("hidden");renderBoard()};window.newGame=()=>{if(S&&S.moves>0&&!S.runSaved)finishRun();S=fresh();H=[];$("#gameover").classList.add("hidden");renderBoard()}
 function fmt(x){let s=x/1000|0,h=s/3600|0,m=(s%3600)/60|0,ss=s%60;return(h?h+":":"")+String(m).padStart(2,"0")+":"+String(ss).padStart(2,"0")}
 function preview(){let mode=$("#preview").value,free=empty(S.b).length;if(!NEXTLIMIT||free>NEXTLIMIT||mode=="off")return"";if(mode=="value"){let q=clone(S.rng);return"Nächster Wert: "+(rnd(q)<.9?2:4)}let out=[],sy={L:"←",R:"→",U:"↑",D:"↓"};for(let d of["L","R","U","D"]){let z=move(S,d);if(!z)continue;let e=empty(z.n.b),q=clone(z.n.rng),p=e[Math.floor(rnd(q)*e.length)],v=rnd(q)<.9?2:4;out.push(`${sy[d]} ${v} @ ${String.fromCharCode(65+p[1])}${p[0]+1}`)}return out.join(" · ")}
 function stats(){REC.bestScore=Math.max(REC.bestScore,S.score);REC.bestTile=Math.max(REC.bestTile,maxTile());save("records",REC);$("#score").textContent=S.score;$("#best").textContent=REC.bestScore;$("#moves").textContent=S.moves;let ub=$("#undoBtn"),uc=S.undoCredits||0;$("#undoCount").textContent=uc;ub.disabled=!H.length||uc<=0;$("#free").textContent=empty(S.b).length;let mx=maxTile(),g=128;while(g<=mx)g*=2;$("#goal").textContent=g;
 let freeNow=empty(S.b).length, nextEnabled=NEXTLIMIT>0&&freeNow<=NEXTLIMIT;
 $("#nextCard").classList.toggle("hidden",NEXTLIMIT===0);
 $("#preview").disabled=!nextEnabled;
-$("#next").textContent=nextEnabled?preview():"";renderMilestones();let a=Object.entries(S.marks);$("#marks").innerHTML=a.length?a.map(([k,v])=>`<div class=r><b>${k}</b><span>${fmt(v.t)} · Zug ${v.m}</span></div>`).join(""):"Noch keine.";let c=Object.keys(CP).map(Number).sort((a,b)=>a-b);$("#cps").innerHTML=c.length?c.map(k=>`<div class=r><b>${k}</b><button onclick=startCP(${k})>Ab hier</button></div>`).join(""):"Noch keine.";$("#records").innerHTML=`<div class=r><b>Höchste Kachel</b><span>${REC.bestTile||"-"}</span></div><div class=r><b>Höchster Score</b><span>${REC.bestScore}</span></div>`;$("#runs").innerHTML=RUNS.length?RUNS.slice(0,12).map(r=>`<div class=r><b>${r.tile} · ${r.score}</b><span>${fmt(r.time)} · ${r.moves} Züge</span></div>`).join(""):"Noch keine abgeschlossenen Runs."}
+$("#next").textContent=nextEnabled?preview():"";renderMilestones();renderHistory();let a=Object.entries(S.marks);$("#marks").innerHTML=a.length?a.map(([k,v])=>`<div class=r><b>${k}</b><span>${fmt(v.t)} · Zug ${v.m}</span></div>`).join(""):"Noch keine.";let c=Object.keys(CP).map(Number).sort((a,b)=>a-b);$("#cps").innerHTML=c.length?c.map(k=>`<div class=r><b>${k}</b><button onclick=startCP(${k})>Ab hier</button></div>`).join(""):"Noch keine.";$("#records").innerHTML=`<div class=r><b>Höchste Kachel</b><span>${REC.bestTile||"-"}</span></div><div class=r><b>Höchster Score</b><span>${REC.bestScore}</span></div>`;$("#runs").innerHTML=RUNS.length?RUNS.slice(0,12).map(r=>`<div class=r><b>${r.tile} · ${r.score}</b><span>${fmt(r.time)} · ${r.moves} Züge</span></div>`).join(""):"Noch keine abgeschlossenen Runs."}
 window.startCP=k=>{S=clone(CP[k]);S.start=Date.now();S.startTile=+k;S.moves=0;S.score=0;S.marks={};S.undoCredits=0;S.ended=false;H=[];$("#gameover").classList.add("hidden");renderBoard()};
 $("#gameover-new").onclick=()=>newGame();document.addEventListener("selectstart",e=>{if(!e.target.closest("input,textarea"))e.preventDefault()});document.addEventListener("contextmenu",e=>{if(e.target.closest("#game,header,nav,.stats,.next"))e.preventDefault()});
+
+function fmtRunTime(ms){
+  let sec=Math.max(0,Math.floor((ms||0)/1000)),h=Math.floor(sec/3600),m=Math.floor(sec%3600/60),s=sec%60;
+  return h?`${h}:${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`:`${m}:${String(s).padStart(2,"0")}`;
+}
+function fmtRunDate(ts){
+  if(!ts)return "—";
+  let d=new Date(ts); return d.toLocaleDateString("de-DE",{day:"2-digit",month:"2-digit"})+" "+d.toLocaleTimeString("de-DE",{hour:"2-digit",minute:"2-digit"});
+}
+function renderHistory(){
+  let box=$("#runHistory"); if(!box)return;
+  let runs=RUNS||[], best=runs.reduce((a,r)=>Math.max(a,r.score||0),0), mx=runs.reduce((a,r)=>Math.max(a,r.tile||0),0);
+  $("#runCount").textContent=runs.length; $("#historyBest").textContent=best; $("#historyMax").textContent=mx||"—";
+  box.innerHTML=runs.length?runs.slice(0,20).map((r,i)=>`<div class="run-row">
+    <div><b>${r.tile||2}</b><small>${fmtRunDate(r.ended||r.date||r.ts)}</small></div>
+    <span>Score <b>${r.score||0}</b></span><span>${r.moves||0} Z.</span><span>${fmtRunTime(r.time)}</span>
+    <small>${(r.startTile||2)>2?"Checkpoint "+r.startTile:"Normal"}</small>
+  </div>`).join(""):`<div class="history-empty">Noch keine abgeschlossenen Spiele.</div>`;
+}
+function finishRun(){
+  if(S.runSaved)return;
+  S.runSaved=true;
+  RUNS.unshift({ended:Date.now(),tile:maxTile(),score:S.score,moves:S.moves,time:Date.now()-S.start,startTile:S.startTile||2,milestones:Object.keys(S.marks||{}).map(Number)});
+  RUNS=RUNS.slice(0,100); save("runs",RUNS); renderHistory();
+}
 function fmtMilestoneTime(ms){
   if(ms==null)return "—";
   let sec=Math.floor(ms/1000),m=Math.floor(sec/60),s=sec%60;
@@ -49,6 +74,7 @@ function renderMilestones(){
     </div>`;
   }).join("");
 }
+$("#clearHistory").onclick=()=>{if(confirm("Spielhistorie wirklich löschen?")){RUNS=[];save("runs",RUNS);renderHistory()}};
 $("#preview").value=["off","value","full"].includes(PREF)?PREF:"off";
 $("#slideSpeed").value=String([90,140,220].includes(SLIDE)?SLIDE:140);
 $("#nextLimit").value=String([0,4,6,8,16].includes(NEXTLIMIT)?NEXTLIMIT:0);
