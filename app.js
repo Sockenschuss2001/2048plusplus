@@ -18,7 +18,7 @@ function animate(q){let old=new Map([...$("#tiles").children].map(x=>[+x.dataset
 function maxTile(){return Math.max(...S.b.flat().map(x=>x.v))}
 function milestones(){let m=maxTile();for(let p=128;p<=m;p*=2)if(!S.marks[p]){let x={t:Date.now()-S.start,m:S.moves};S.marks[p]=x;S.undoCredits=(S.undoCredits||0)+1;CP[p]=clone(S);if(!REC.fastest[p]||x.t<REC.fastest[p])REC.fastest[p]=x.t;if(!REC.fewest[p]||x.m<REC.fewest[p])REC.fewest[p]=x.m;REC.bestTile=Math.max(REC.bestTile,p);save("cp",CP);save("records",REC)}}
 function go(d){if(lock)return;let q=move(S,d);if(!q)return;lock=1;H.push(clone(S));if(H.length>200)H.shift();animate(q)}
-window.undo=()=>{if(lock||!H.length||(S.undoCredits||0)<=0)return;let credits=S.undoCredits-1,marks=S.marks,ended=S.ended;S=H.pop();S.undoCredits=credits;S.marks=marks;S.ended=false;$("#gameover").classList.add("hidden");renderBoard()};window.newGame=()=>{if(PAUSED)setPaused(false);if(S&&S.moves>0&&!S.runSaved)finishRun();S=fresh();H=[];$("#gameover").classList.add("hidden");renderBoard()}
+window.undo=()=>{if(lock||!H.length||(S.undoCredits||0)<=0)return;let credits=S.undoCredits-1,marks=S.marks,ended=S.ended;S=H.pop();S.undoCredits=credits;S.marks=marks;S.ended=false;$("#gameover").classList.add("hidden");renderBoard()};window.newGame=()=>{if(PAUSED)setPaused(false);MENU_PAUSED=false;if(S&&S.moves>0&&!S.runSaved)finishRun();S=fresh();H=[];$("#gameover").classList.add("hidden");$("#panel").classList.add("hidden");renderBoard()}
 function fmt(x){let s=x/1000|0,h=s/3600|0,m=(s%3600)/60|0,ss=s%60;return(h?h+":":"")+String(m).padStart(2,"0")+":"+String(ss).padStart(2,"0")}
 function preview(){let mode=$("#preview").value,free=empty(S.b).length;if(!NEXTLIMIT||free>NEXTLIMIT||mode=="off")return"";if(mode=="value"){let q=clone(S.rng);return"Nächster Wert: "+(rnd(q)<.9?2:4)}let out=[],sy={L:"←",R:"→",U:"↑",D:"↓"};for(let d of["L","R","U","D"]){let z=move(S,d);if(!z)continue;let e=empty(z.n.b),q=clone(z.n.rng),p=e[Math.floor(rnd(q)*e.length)],v=rnd(q)<.9?2:4;out.push(`${sy[d]} ${v} @ ${String.fromCharCode(65+p[1])}${p[0]+1}`)}return out.join(" · ")}
 function stats(){REC.bestScore=Math.max(REC.bestScore,S.score);REC.bestTile=Math.max(REC.bestTile,maxTile());save("records",REC);$("#score").textContent=S.score;$("#best").textContent=REC.bestScore;$("#moves").textContent=S.moves;let ub=$("#undoBtn"),uc=S.undoCredits||0;$("#undoCount").textContent=uc;ub.disabled=!H.length||uc<=0;$("#free").textContent=empty(S.b).length;let mx=maxTile(),g=128;while(g<=mx)g*=2;$("#goal").textContent=g;
@@ -135,12 +135,12 @@ function renderMilestones(){
     </div>`;
   }).join("");
 }
-let PAUSED=false,PAUSE_AT=0;
+let PAUSED=false,PAUSE_AT=0,MENU_PAUSED=false;
 function setPaused(v){
   if(v===PAUSED)return;
   if(v){PAUSED=true;PAUSE_AT=Date.now()}
   else{if(PAUSE_AT)S.start+=Date.now()-PAUSE_AT;PAUSED=false;PAUSE_AT=0}
-  $("#pauseOverlay").classList.toggle("hidden",!PAUSED);
+  $("#pauseOverlay").classList.toggle("hidden",!PAUSED||!$("#panel").classList.contains("hidden"));
   $("#pauseBtn").classList.toggle("active",PAUSED);
   $("#pauseBtn").textContent=PAUSED?"▶":"Ⅱ";
 }
@@ -153,7 +153,18 @@ $("#preview").value=["off","value","full"].includes(PREF)?PREF:"off";
 $("#slideSpeed").value=String([50,90,140,220].includes(SLIDE)?SLIDE:140);
 $("#nextLimit").value=String([0,4,6,8,16].includes(NEXTLIMIT)?NEXTLIMIT:0);
 $("#slideSpeed").onchange=e=>{SLIDE=+e.target.value;localStorage.setItem("2048pp_slide",SLIDE)};
-$("#nextLimit").onchange=e=>{NEXTLIMIT=+e.target.value;localStorage.setItem("2048pp_nextlimit",NEXTLIMIT);stats()};$("#preview").onchange=e=>{localStorage.setItem("2048pp_preview",e.target.value);stats()};$("#menu").onclick=()=>{$("#panel").classList.remove("hidden");stats()};$("#close").onclick=()=>$("#panel").classList.add("hidden");
+$("#nextLimit").onchange=e=>{NEXTLIMIT=+e.target.value;localStorage.setItem("2048pp_nextlimit",NEXTLIMIT);stats()};$("#preview").onchange=e=>{localStorage.setItem("2048pp_preview",e.target.value);stats()};$("#menu").onclick=()=>{
+  MENU_PAUSED=!PAUSED;
+  if(MENU_PAUSED)setPaused(true);
+  $("#panel").classList.remove("hidden");
+  $("#pauseOverlay").classList.add("hidden");
+  stats()
+};
+$("#close").onclick=()=>{
+  $("#panel").classList.add("hidden");
+  if(MENU_PAUSED){MENU_PAUSED=false;setPaused(false)}
+  else if(PAUSED)$("#pauseOverlay").classList.remove("hidden");
+};
 function setTheme(t){THEME=["blue","original","deepblue"].includes(t)?t:"deepblue";document.body.dataset.theme=THEME;localStorage.setItem("2048pp_theme",THEME);document.querySelectorAll(".theme-btn").forEach(b=>b.classList.toggle("active",b.dataset.theme===THEME))}
 setTheme(THEME);document.querySelectorAll(".theme-btn").forEach(b=>b.onclick=()=>setTheme(b.dataset.theme));
-for(let i=0;i<16;i++){let e=document.createElement("div");e.className="cell";$("#grid").appendChild(e)}let x,y,G=$("#game");G.ontouchstart=e=>{if(PAUSED)return;x=e.touches[0].clientX;y=e.touches[0].clientY};G.ontouchend=e=>{if(PAUSED)return;let X=e.changedTouches[0].clientX-x,Y=e.changedTouches[0].clientY-y;if(Math.max(Math.abs(X),Math.abs(Y))<22)return;go(Math.abs(X)>Math.abs(Y)?(X>0?"R":"L"):(Y>0?"D":"U"))};S=fresh();requestAnimationFrame(renderBoard);addEventListener("resize",()=>requestAnimationFrame(renderBoard));setInterval(()=>$("#time").textContent=fmt(Date.now()-S.start),1000);if("serviceWorker"in navigator)navigator.serviceWorker.register("sw.js");
+for(let i=0;i<16;i++){let e=document.createElement("div");e.className="cell";$("#grid").appendChild(e)}let x,y,G=$("#game");G.ontouchstart=e=>{if(PAUSED)return;x=e.touches[0].clientX;y=e.touches[0].clientY};G.ontouchend=e=>{if(PAUSED)return;let X=e.changedTouches[0].clientX-x,Y=e.changedTouches[0].clientY-y;if(Math.max(Math.abs(X),Math.abs(Y))<22)return;go(Math.abs(X)>Math.abs(Y)?(X>0?"R":"L"):(Y>0?"D":"U"))};S=fresh();requestAnimationFrame(renderBoard);addEventListener("resize",()=>requestAnimationFrame(renderBoard));setInterval(()=>$("#time").textContent=fmt((PAUSED&&PAUSE_AT?PAUSE_AT:Date.now())-S.start),1000);if("serviceWorker"in navigator)navigator.serviceWorker.register("sw.js");

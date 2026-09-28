@@ -199,3 +199,25 @@ nav{grid-template-columns:82px minmax(0,1fr) minmax(0,1fr) 52px 52px!important}
 .pause-overlay b{font-size:30px;letter-spacing:2px}
 .pause-overlay small{margin-top:7px;font-size:13px;font-weight:700}
 @media(max-width:390px){nav{grid-template-columns:76px minmax(0,1fr) minmax(0,1fr) 48px 48px!important}}
+
+/* v0.5.4 — pause/menu behavior and uniform controls */
+nav{
+  display:grid!important;
+  grid-template-columns:82px minmax(0,1fr) minmax(0,1fr) 52px 52px!important;
+  column-gap:8px!important;
+  row-gap:8px!important;
+}
+#game:has(.pause-overlay:not(.hidden)) #tiles .tile{
+  filter:blur(7px)!important;
+}
+#game:has(.pause-overlay:not(.hidden)) #grid{
+  filter:blur(1px);
+}
+.pause-overlay{
+  backdrop-filter:none!important;
+  -webkit-backdrop-filter:none!important;
+  background:rgba(235,243,248,.62)!important;
+}
+@media(max-width:390px){
+  nav{grid-template-columns:76px minmax(0,1fr) minmax(0,1fr) 48px 48px!important;column-gap:7px!important}
+}
