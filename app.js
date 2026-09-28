@@ -6,7 +6,7 @@ let NEXTLIMIT=+(localStorage.getItem("2048pp_nextlimit")||0);
 const clone=x=>JSON.parse(JSON.stringify(x));function rnd(s){s.x=(Math.imul(1664525,s.x)+1013904223)>>>0;return s.x/4294967296}
 function blank(){return Array.from({length:4},()=>Array.from({length:4},()=>({v:0,id:0})))}function empty(b){let a=[];for(let r=0;r<4;r++)for(let c=0;c<4;c++)if(!b[r][c].v)a.push([r,c]);return a}
 function spawn(s){let e=empty(s.b);if(!e.length)return;let p=e[Math.floor(rnd(s.rng)*e.length)];s.b[p[0]][p[1]]={v:rnd(s.rng)<.9?2:4,id:++id}}
-function fresh(){let s={b:blank(),score:0,moves:0,start:Date.now(),startTile:2,marks:{},undoCredits:0,ended:false,rng:{x:(Date.now()^Math.random()*4294967296)>>>0}};spawn(s);spawn(s);return s}
+function fresh(){let s={b:blank(),score:0,moves:0,start:Date.now(),startTile:2,marks:{},undoCredits:0,ended:false,runSaved:false,rng:{x:(Date.now()^Math.random()*4294967296)>>>0}};spawn(s);spawn(s);return s}
 function move(s,d){let n=clone(s),b=blank(),gain=0,anim=[];for(let i=0;i<4;i++){let a=[];for(let j=0;j<4;j++){let r=d=="L"||d=="R"?i:(d=="U"?j:3-j),c=d=="U"||d=="D"?i:(d=="L"?j:3-j),q=s.b[r][c];if(q.v)a.push({v:q.v,id:q.id})}let z=[];for(let k=0;k<a.length;k++){if(a[k+1]&&a[k].v==a[k+1].v){z.push({v:a[k].v*2,id:a[k].id,parts:[a[k],a[k+1]]});gain+=a[k].v*2;k++}else z.push(a[k])}for(let j=0;j<z.length;j++){let r=d=="L"||d=="R"?i:(d=="U"?j:3-j),c=d=="U"||d=="D"?i:(d=="L"?j:3-j),q=z[j];b[r][c]={v:q.v,id:q.id};for(let p of(q.parts||[q]))anim.push({id:p.id,r,c,target:q.v,merge:!!q.parts})}}if(JSON.stringify(b.map(x=>x.map(y=>y.v)))==JSON.stringify(s.b.map(x=>x.map(y=>y.v))))return null;n.b=b;n.score+=gain;n.moves++;return{n,anim,gain}}
 function geom(){let cells=[...document.querySelectorAll(".cell")],base=$("#tiles").getBoundingClientRect();return cells.map(c=>{let r=c.getBoundingClientRect();return{x:r.left-base.left,y:r.top-base.top,w:r.width,h:r.height}})}
 function place(e,r,c,g){let p=g[r*4+c];e.style.left=p.x+"px";e.style.top=p.y+"px";e.style.width=p.w+"px";e.style.height=p.h+"px"}
@@ -26,7 +26,7 @@ let freeNow=empty(S.b).length, nextEnabled=NEXTLIMIT>0&&freeNow<=NEXTLIMIT;
 $("#nextCard").classList.toggle("hidden",NEXTLIMIT===0);
 $("#preview").disabled=!nextEnabled;
 $("#next").textContent=nextEnabled?preview():"";renderMilestones();renderHistory();renderCoach();let a=Object.entries(S.marks);$("#marks").innerHTML=a.length?a.map(([k,v])=>`<div class=r><b>${k}</b><span>${fmt(v.t)} · Zug ${v.m}</span></div>`).join(""):"Noch keine.";let c=Object.keys(CP).map(Number).sort((a,b)=>a-b);$("#cps").innerHTML=c.length?c.map(k=>`<div class=r><b>${k}</b><button onclick=startCP(${k})>Ab hier</button></div>`).join(""):"Noch keine.";$("#records").innerHTML=`<div class=r><b>Höchste Kachel</b><span>${REC.bestTile||"-"}</span></div><div class=r><b>Höchster Score</b><span>${REC.bestScore}</span></div>`;$("#runs").innerHTML=RUNS.length?RUNS.slice(0,12).map(r=>`<div class=r><b>${r.tile} · ${r.score}</b><span>${fmt(r.time)} · ${r.moves} Züge</span></div>`).join(""):"Noch keine abgeschlossenen Runs."}
-window.startCP=k=>{S=clone(CP[k]);S.start=Date.now();S.startTile=+k;S.moves=0;S.score=0;S.marks={};S.undoCredits=0;S.ended=false;H=[];$("#gameover").classList.add("hidden");renderBoard()};
+window.startCP=k=>{if(S&&S.moves>0&&!S.runSaved)finishRun();S=clone(CP[k]);S.start=Date.now();S.startTile=+k;S.moves=0;S.score=0;S.marks={};S.undoCredits=0;S.ended=false;S.runSaved=false;H=[];$("#gameover").classList.add("hidden");renderBoard()};
 $("#gameover-new").onclick=()=>newGame();document.addEventListener("selectstart",e=>{if(!e.target.closest("input,textarea"))e.preventDefault()});document.addEventListener("contextmenu",e=>{if(e.target.closest("#game,header,nav,.stats,.next"))e.preventDefault()});
 
 
@@ -126,7 +126,7 @@ function renderMilestones(){
   $("#milestoneCount").textContent=Object.keys(S.marks||{}).length;
   $("#milestoneUndo").textContent=S.undoCredits||0;
   box.innerHTML=vals.map(v=>{
-    let hit=S.marks&&S.marks[v], ft=REC.fastest&&REC.fastest[v], fm=REC.fewest&&REC.fewest[v];
+    let hit=S.marks&&S.marks[v],ft=Number(REC.fastest&&REC.fastest[v]),fm=Number(REC.fewest&&REC.fewest[v]);if(!Number.isFinite(ft)||ft<1000)ft=null;if(!Number.isFinite(fm)||fm<2)fm=null;
     return `<div class="ms-row ${hit?"hit":""}">
       <b>${v}</b><span>${hit?"✓":"○"}</span>
       <span>${hit?fmtMilestoneTime(hit.t):"—"}</span>
