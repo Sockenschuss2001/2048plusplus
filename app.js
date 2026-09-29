@@ -3,22 +3,61 @@ const load=(k,d)=>{try{return JSON.parse(localStorage.getItem(K+k))??d}catch{ret
 let CP=load("cp",{}),RUNS=load("runs",[]),REC=load("records",{bestScore:0,bestTile:0,fastest:{},fewest:{}}),PREF=localStorage.getItem("2048pp_preview")||"off";let THEME=localStorage.getItem("2048pp_theme")||"deepblue";
 let SLIDE=+(localStorage.getItem("2048pp_slide")||140);
 let NEXTLIMIT=+(localStorage.getItem("2048pp_nextlimit")||0);
-const clone=x=>JSON.parse(JSON.stringify(x));function rnd(s){s.x=(Math.imul(1664525,s.x)+1013904223)>>>0;return s.x/4294967296}
+const clone=x=>JSON.parse(JSON.stringify(x));
+const ACTIVE_KEY=K+"active",ACTIVE_TTL=48*60*60*1000;
+let BACKGROUND_AT=0,RESUME_WAS_PAUSED=false;
+
+function activeElapsed(){
+  if(!S)return 0;
+  return Math.max(0,(PAUSED&&PAUSE_AT?PAUSE_AT:Date.now())-S.start);
+}
+function saveActive(){
+  if(!S||S.ended||S.runSaved){localStorage.removeItem(ACTIVE_KEY);return}
+  try{
+    localStorage.setItem(ACTIVE_KEY,JSON.stringify({
+      savedAt:Date.now(),
+      elapsed:activeElapsed(),
+      state:clone(S),
+      history:clone(H)
+    }));
+  }catch(e){}
+}
+function loadActive(){
+  try{
+    let a=JSON.parse(localStorage.getItem(ACTIVE_KEY)||"null");
+    if(!a||!a.state||!a.savedAt)return null;
+    if(Date.now()-a.savedAt>ACTIVE_TTL){localStorage.removeItem(ACTIVE_KEY);return null}
+    if(a.state.ended||a.state.runSaved)return null;
+    return a;
+  }catch(e){return null}
+}
+function syncIdFromState(){
+  id=Math.max(id,...S.b.flat().map(x=>+x.id||0),...H.flatMap(h=>h.b?h.b.flat().map(x=>+x.id||0):[0]));
+}
+function showResumePrompt(wasPaused=false){
+  RESUME_WAS_PAUSED=wasPaused;
+  if(!PAUSED)setPaused(true);
+  $("#resumeInfo").textContent=`Kachel ${maxTile()} · Score ${S.score} · ${S.moves} Züge · ${fmt(activeElapsed())}`;
+  $("#resumePrompt").classList.remove("hidden");
+}
+function hideResumePrompt(){
+  $("#resumePrompt").classList.add("hidden");
+}function rnd(s){s.x=(Math.imul(1664525,s.x)+1013904223)>>>0;return s.x/4294967296}
 function blank(){return Array.from({length:4},()=>Array.from({length:4},()=>({v:0,id:0})))}function empty(b){let a=[];for(let r=0;r<4;r++)for(let c=0;c<4;c++)if(!b[r][c].v)a.push([r,c]);return a}
 function spawn(s){let e=empty(s.b);if(!e.length)return;let p=e[Math.floor(rnd(s.rng)*e.length)];s.b[p[0]][p[1]]={v:rnd(s.rng)<.9?2:4,id:++id}}
 function fresh(){let s={b:blank(),score:0,moves:0,start:Date.now(),startTile:2,marks:{},undoCredits:0,ended:false,runSaved:false,rng:{x:(Date.now()^Math.random()*4294967296)>>>0}};spawn(s);spawn(s);return s}
 function move(s,d){let n=clone(s),b=blank(),gain=0,anim=[];for(let i=0;i<4;i++){let a=[];for(let j=0;j<4;j++){let r=d=="L"||d=="R"?i:(d=="U"?j:3-j),c=d=="U"||d=="D"?i:(d=="L"?j:3-j),q=s.b[r][c];if(q.v)a.push({v:q.v,id:q.id})}let z=[];for(let k=0;k<a.length;k++){if(a[k+1]&&a[k].v==a[k+1].v){z.push({v:a[k].v*2,id:a[k].id,parts:[a[k],a[k+1]]});gain+=a[k].v*2;k++}else z.push(a[k])}for(let j=0;j<z.length;j++){let r=d=="L"||d=="R"?i:(d=="U"?j:3-j),c=d=="U"||d=="D"?i:(d=="L"?j:3-j),q=z[j];b[r][c]={v:q.v,id:q.id};for(let p of(q.parts||[q]))anim.push({id:p.id,r,c,target:q.v,merge:!!q.parts})}}if(JSON.stringify(b.map(x=>x.map(y=>y.v)))==JSON.stringify(s.b.map(x=>x.map(y=>y.v))))return null;n.b=b;n.score+=gain;n.moves++;return{n,anim,gain}}
 function geom(){let cells=[...document.querySelectorAll(".cell")],base=$("#tiles").getBoundingClientRect();return cells.map(c=>{let r=c.getBoundingClientRect();return{x:r.left-base.left,y:r.top-base.top,w:r.width,h:r.height}})}
 function place(e,r,c,g){let p=g[r*4+c];e.style.left=p.x+"px";e.style.top=p.y+"px";e.style.width=p.w+"px";e.style.height=p.h+"px"}
-function renderBoard(){let L=$("#tiles"),g=geom();L.innerHTML="";for(let r=0;r<4;r++)for(let c=0;c<4;c++){let q=S.b[r][c];if(!q.v)continue;let e=document.createElement("div");e.dataset.id=q.id;e.className=`tile ${q.v<=16384?"v"+q.v:"high"}`;e.textContent=q.v;place(e,r,c,g);L.appendChild(e)}stats()}
+function renderBoard(){saveActive();let L=$("#tiles"),g=geom();L.innerHTML="";for(let r=0;r<4;r++)for(let c=0;c<4;c++){let q=S.b[r][c];if(!q.v)continue;let e=document.createElement("div");e.dataset.id=q.id;e.className=`tile ${q.v<=16384?"v"+q.v:"high"}`;e.textContent=q.v;place(e,r,c,g);L.appendChild(e)}stats()}
 function canMove(){for(let d of["L","R","U","D"])if(move(S,d))return true;return false}
 function scorePop(gain){if(!gain)return;let box=$("#score").parentElement,e=document.createElement("div");e.className="score-pop";e.textContent="+"+gain;box.appendChild(e);setTimeout(()=>e.remove(),700)}
-function showGameOver(){if(S.ended)return;S.ended=true;finishRun();$("#gameover-score").textContent=`Score ${S.score} · ${S.moves} Züge`;$("#gameover").classList.remove("hidden");stats()}
+function showGameOver(){if(S.ended)return;S.ended=true;localStorage.removeItem(ACTIVE_KEY);finishRun();$("#gameover-score").textContent=`Score ${S.score} · ${S.moves} Züge`;$("#gameover").classList.remove("hidden");stats()}
 function animate(q){let old=new Map([...$("#tiles").children].map(x=>[+x.dataset.id,x])),g=geom();for(let m of q.anim){let e=old.get(m.id);if(!e)continue;if(m.merge){e.textContent=m.target;e.className=`tile ${m.target<=16384?"v"+m.target:"high"}`}place(e,m.r,m.c,g)}setTimeout(()=>{S=q.n;spawn(S);milestones();renderBoard();scorePop(q.gain);lock=0;if(!canMove())showGameOver()},SLIDE)}
 function maxTile(){return Math.max(...S.b.flat().map(x=>x.v))}
 function milestones(){let m=maxTile();for(let p=128;p<=m;p*=2)if(!S.marks[p]){let x={t:Date.now()-S.start,m:S.moves};S.marks[p]=x;S.undoCredits=(S.undoCredits||0)+1;CP[p]=clone(S);if(!REC.fastest[p]||x.t<REC.fastest[p])REC.fastest[p]=x.t;if(!REC.fewest[p]||x.m<REC.fewest[p])REC.fewest[p]=x.m;REC.bestTile=Math.max(REC.bestTile,p);save("cp",CP);save("records",REC)}}
 function go(d){if(lock)return;let q=move(S,d);if(!q)return;lock=1;H.push(clone(S));if(H.length>200)H.shift();animate(q)}
-window.undo=()=>{if(lock||!H.length||(S.undoCredits||0)<=0)return;let credits=S.undoCredits-1,marks=S.marks,ended=S.ended;S=H.pop();S.undoCredits=credits;S.marks=marks;S.ended=false;$("#gameover").classList.add("hidden");renderBoard()};window.newGame=()=>{if(PAUSED)setPaused(false);MENU_PAUSED=false;if(S&&S.moves>0&&!S.runSaved)finishRun();S=fresh();H=[];$("#gameover").classList.add("hidden");$("#panel").classList.add("hidden");renderBoard()}
+window.undo=()=>{if(lock||!H.length||(S.undoCredits||0)<=0)return;let credits=S.undoCredits-1,marks=S.marks,ended=S.ended;S=H.pop();S.undoCredits=credits;S.marks=marks;S.ended=false;$("#gameover").classList.add("hidden");renderBoard()};window.newGame=()=>{hideResumePrompt();localStorage.removeItem(ACTIVE_KEY);if(PAUSED)setPaused(false);MENU_PAUSED=false;if(S&&S.moves>0&&!S.runSaved)finishRun();S=fresh();H=[];$("#gameover").classList.add("hidden");$("#panel").classList.add("hidden");renderBoard()}
 function fmt(x){let s=x/1000|0,h=s/3600|0,m=(s%3600)/60|0,ss=s%60;return(h?h+":":"")+String(m).padStart(2,"0")+":"+String(ss).padStart(2,"0")}
 function preview(){let mode=$("#preview").value,free=empty(S.b).length;if(!NEXTLIMIT||free>NEXTLIMIT||mode=="off")return"";if(mode=="value"){let q=clone(S.rng);return"Nächster Wert: "+(rnd(q)<.9?2:4)}let out=[],sy={L:"←",R:"→",U:"↑",D:"↓"};for(let d of["L","R","U","D"]){let z=move(S,d);if(!z)continue;let e=empty(z.n.b),q=clone(z.n.rng),p=e[Math.floor(rnd(q)*e.length)],v=rnd(q)<.9?2:4;out.push(`${sy[d]} ${v} @ ${String.fromCharCode(65+p[1])}${p[0]+1}`)}return out.join(" · ")}
 function stats(){REC.bestScore=Math.max(REC.bestScore,S.score);REC.bestTile=Math.max(REC.bestTile,maxTile());save("records",REC);$("#score").textContent=S.score;$("#best").textContent=REC.bestScore;$("#moves").textContent=S.moves;let ub=$("#undoBtn"),uc=S.undoCredits||0;$("#undoCount").textContent=uc;ub.disabled=!H.length||uc<=0;$("#free").textContent=empty(S.b).length;let mx=maxTile(),g=128;while(g<=mx)g*=2;$("#goal").textContent=g;
@@ -165,6 +204,43 @@ $("#close").onclick=()=>{
   if(MENU_PAUSED){MENU_PAUSED=false;setPaused(false)}
   else if(PAUSED)$("#pauseOverlay").classList.remove("hidden");
 };
+$("#resumeContinue").onclick=()=>{
+  hideResumePrompt();
+  if(!RESUME_WAS_PAUSED&&PAUSED)setPaused(false);
+  else if(RESUME_WAS_PAUSED&&PAUSED)$("#pauseOverlay").classList.remove("hidden");
+  RESUME_WAS_PAUSED=false;
+  saveActive();
+};
+$("#resumeNew").onclick=()=>{
+  hideResumePrompt();
+  RESUME_WAS_PAUSED=false;
+  newGame();
+};
+
+document.addEventListener("visibilitychange",()=>{
+  if(document.hidden){
+    BACKGROUND_AT=Date.now();
+    saveActive();
+  }else if(BACKGROUND_AT){
+    let away=Date.now()-BACKGROUND_AT,wasPaused=PAUSED;
+    if(!PAUSED)S.start+=away; // background time does not count as play time
+    BACKGROUND_AT=0;
+    saveActive();
+    if(away>=30000&&S&&!S.ended&&S.moves>0)showResumePrompt(wasPaused);
+  }
+});
+addEventListener("pagehide",saveActive);
+
 function setTheme(t){THEME=["blue","original","deepblue"].includes(t)?t:"deepblue";document.body.dataset.theme=THEME;localStorage.setItem("2048pp_theme",THEME);document.querySelectorAll(".theme-btn").forEach(b=>b.classList.toggle("active",b.dataset.theme===THEME))}
 setTheme(THEME);document.querySelectorAll(".theme-btn").forEach(b=>b.onclick=()=>setTheme(b.dataset.theme));
-for(let i=0;i<16;i++){let e=document.createElement("div");e.className="cell";$("#grid").appendChild(e)}let x,y,G=$("#game");G.ontouchstart=e=>{if(PAUSED)return;x=e.touches[0].clientX;y=e.touches[0].clientY};G.ontouchend=e=>{if(PAUSED)return;let X=e.changedTouches[0].clientX-x,Y=e.changedTouches[0].clientY-y;if(Math.max(Math.abs(X),Math.abs(Y))<22)return;go(Math.abs(X)>Math.abs(Y)?(X>0?"R":"L"):(Y>0?"D":"U"))};S=fresh();requestAnimationFrame(renderBoard);addEventListener("resize",()=>requestAnimationFrame(renderBoard));setInterval(()=>$("#time").textContent=fmt((PAUSED&&PAUSE_AT?PAUSE_AT:Date.now())-S.start),1000);if("serviceWorker"in navigator)navigator.serviceWorker.register("sw.js");
+for(let i=0;i<16;i++){let e=document.createElement("div");e.className="cell";$("#grid").appendChild(e)}let x,y,G=$("#game");G.ontouchstart=e=>{if(PAUSED)return;x=e.touches[0].clientX;y=e.touches[0].clientY};G.ontouchend=e=>{if(PAUSED)return;let X=e.changedTouches[0].clientX-x,Y=e.changedTouches[0].clientY-y;if(Math.max(Math.abs(X),Math.abs(Y))<22)return;go(Math.abs(X)>Math.abs(Y)?(X>0?"R":"L"):(Y>0?"D":"U"))};
+let ACTIVE=loadActive();
+if(ACTIVE&&ACTIVE.state&&ACTIVE.state.moves>0){
+  S=ACTIVE.state;H=Array.isArray(ACTIVE.history)?ACTIVE.history:[];
+  S.start=Date.now()-Math.max(0,+ACTIVE.elapsed||0);
+  S.ended=false;S.runSaved=false;
+  syncIdFromState();
+  requestAnimationFrame(()=>{renderBoard();showResumePrompt(false)});
+}else{
+  S=fresh();H=[];requestAnimationFrame(renderBoard);
+}addEventListener("resize",()=>requestAnimationFrame(renderBoard));setInterval(()=>$("#time").textContent=fmt((PAUSED&&PAUSE_AT?PAUSE_AT:Date.now())-S.start),1000);if("serviceWorker"in navigator)navigator.serviceWorker.register("sw.js");

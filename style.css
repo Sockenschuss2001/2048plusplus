@@ -221,3 +221,21 @@ nav{
 @media(max-width:390px){
   nav{grid-template-columns:76px minmax(0,1fr) minmax(0,1fr) 48px 48px!important;column-gap:7px!important}
 }
+
+/* v0.5.5 — persistent active game / resume */
+.resume-prompt{
+  position:fixed;inset:0;z-index:120;
+  display:flex;align-items:center;justify-content:center;
+  padding:22px;background:rgba(19,42,58,.38);
+  -webkit-backdrop-filter:blur(5px);backdrop-filter:blur(5px)
+}
+.resume-prompt.hidden{display:none!important}
+.resume-card{
+  width:min(390px,100%);background:#fff;color:var(--ink);
+  border-radius:22px;padding:24px 20px;box-shadow:0 18px 50px rgba(0,0,0,.22)
+}
+.resume-card h2{margin:0 0 10px;font-size:27px}
+#resumeInfo{margin:0 0 18px;line-height:1.45}
+.resume-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.resume-actions button{min-height:54px}
+.resume-card small{display:block;margin-top:13px;opacity:.62;line-height:1.35}
