@@ -45,7 +45,7 @@ function hideResumePrompt(){
 }function rnd(s){s.x=(Math.imul(1664525,s.x)+1013904223)>>>0;return s.x/4294967296}
 function blank(){return Array.from({length:4},()=>Array.from({length:4},()=>({v:0,id:0})))}function empty(b){let a=[];for(let r=0;r<4;r++)for(let c=0;c<4;c++)if(!b[r][c].v)a.push([r,c]);return a}
 function spawn(s){let e=empty(s.b);if(!e.length)return;let p=e[Math.floor(rnd(s.rng)*e.length)];s.b[p[0]][p[1]]={v:rnd(s.rng)<.9?2:4,id:++id}}
-function fresh(){let s={b:blank(),score:0,moves:0,start:Date.now(),startTile:2,marks:{},undoCredits:0,ended:false,runSaved:false,rng:{x:(Date.now()^Math.random()*4294967296)>>>0}};spawn(s);spawn(s);return s}
+function fresh(){let s={b:blank(),score:0,moves:0,start:Date.now(),startTile:2,marks:{},undoCredits:0,ended:false,runSaved:false,win2048Shown:false,rng:{x:(Date.now()^Math.random()*4294967296)>>>0}};spawn(s);spawn(s);return s}
 function move(s,d){let n=clone(s),b=blank(),gain=0,anim=[];for(let i=0;i<4;i++){let a=[];for(let j=0;j<4;j++){let r=d=="L"||d=="R"?i:(d=="U"?j:3-j),c=d=="U"||d=="D"?i:(d=="L"?j:3-j),q=s.b[r][c];if(q.v)a.push({v:q.v,id:q.id})}let z=[];for(let k=0;k<a.length;k++){if(a[k+1]&&a[k].v==a[k+1].v){z.push({v:a[k].v*2,id:a[k].id,parts:[a[k],a[k+1]]});gain+=a[k].v*2;k++}else z.push(a[k])}for(let j=0;j<z.length;j++){let r=d=="L"||d=="R"?i:(d=="U"?j:3-j),c=d=="U"||d=="D"?i:(d=="L"?j:3-j),q=z[j];b[r][c]={v:q.v,id:q.id};for(let p of(q.parts||[q]))anim.push({id:p.id,r,c,target:q.v,merge:!!q.parts})}}if(JSON.stringify(b.map(x=>x.map(y=>y.v)))==JSON.stringify(s.b.map(x=>x.map(y=>y.v))))return null;n.b=b;n.score+=gain;n.moves++;return{n,anim,gain}}
 function geom(){let cells=[...document.querySelectorAll(".cell")],base=$("#tiles").getBoundingClientRect();return cells.map(c=>{let r=c.getBoundingClientRect();return{x:r.left-base.left,y:r.top-base.top,w:r.width,h:r.height}})}
 function place(e,r,c,g){let p=g[r*4+c];e.style.left=p.x+"px";e.style.top=p.y+"px";e.style.width=p.w+"px";e.style.height=p.h+"px"}
@@ -55,7 +55,8 @@ function scorePop(gain){if(!gain)return;let box=$("#score").parentElement,e=docu
 function showGameOver(){if(S.ended)return;S.ended=true;localStorage.removeItem(ACTIVE_KEY);finishRun();$("#gameover-score").textContent=`Score ${S.score} · ${S.moves} Züge`;$("#gameover").classList.remove("hidden");stats()}
 function animate(q){let old=new Map([...$("#tiles").children].map(x=>[+x.dataset.id,x])),g=geom();for(let m of q.anim){let e=old.get(m.id);if(!e)continue;if(m.merge){e.textContent=m.target;e.className=`tile ${m.target<=16384?"v"+m.target:"high"}`}place(e,m.r,m.c,g)}setTimeout(()=>{S=q.n;spawn(S);milestones();renderBoard();scorePop(q.gain);lock=0;if(!canMove())showGameOver()},SLIDE)}
 function maxTile(){return Math.max(...S.b.flat().map(x=>x.v))}
-function milestones(){let m=maxTile();for(let p=128;p<=m;p*=2)if(!S.marks[p]){let x={t:Date.now()-S.start,m:S.moves};S.marks[p]=x;S.undoCredits=(S.undoCredits||0)+1;CP[p]=clone(S);if(!REC.fastest[p]||x.t<REC.fastest[p])REC.fastest[p]=x.t;if(!REC.fewest[p]||x.m<REC.fewest[p])REC.fewest[p]=x.m;REC.bestTile=Math.max(REC.bestTile,p);save("cp",CP);save("records",REC)}}
+function milestones(){let m=maxTile();for(let p=128;p<=m;p*=2)if(!S.marks[p]){let x={t:Date.now()-S.start,m:S.moves};S.marks[p]=x;S.undoCredits=(S.undoCredits||0)+1;CP[p]=clone(S);if(!REC.fastest[p]||x.t<REC.fastest[p])REC.fastest[p]=x.t;if(!REC.fewest[p]||x.m<REC.fewest[p])REC.fewest[p]=x.m;REC.bestTile=Math.max(REC.bestTile,p);save("cp",CP);save("records",REC)}
+if(S.marks&&S.marks[2048]&&!S.win2048Shown){S.win2048Shown=true;saveActive();setTimeout(show2048Win,Math.max(80,SLIDE||90))}}
 function go(d){if(lock)return;let q=move(S,d);if(!q)return;lock=1;H.push(clone(S));if(H.length>200)H.shift();animate(q)}
 window.undo=()=>{if(lock||!H.length||(S.undoCredits||0)<=0)return;let credits=S.undoCredits-1,marks=S.marks,ended=S.ended;S=H.pop();S.undoCredits=credits;S.marks=marks;S.ended=false;$("#gameover").classList.add("hidden");renderBoard()};window.newGame=()=>{hideResumePrompt();localStorage.removeItem(ACTIVE_KEY);if(PAUSED)setPaused(false);MENU_PAUSED=false;if(S&&S.moves>0&&!S.runSaved)finishRun();S=fresh();H=[];$("#gameover").classList.add("hidden");$("#panel").classList.add("hidden");renderBoard()}
 function fmt(x){let s=x/1000|0,h=s/3600|0,m=(s%3600)/60|0,ss=s%60;return(h?h+":":"")+String(m).padStart(2,"0")+":"+String(ss).padStart(2,"0")}
@@ -65,7 +66,7 @@ let freeNow=empty(S.b).length, nextEnabled=NEXTLIMIT>0&&freeNow<=NEXTLIMIT;
 $("#nextCard").classList.toggle("hidden",NEXTLIMIT===0);
 $("#preview").disabled=!nextEnabled;
 $("#next").textContent=nextEnabled?preview():"";renderMilestones();renderHistory();renderCoach();let a=Object.entries(S.marks);$("#marks").innerHTML=a.length?a.map(([k,v])=>`<div class=r><b>${k}</b><span>${fmt(v.t)} · Zug ${v.m}</span></div>`).join(""):"Noch keine.";let c=Object.keys(CP).map(Number).sort((a,b)=>a-b);$("#cps").innerHTML=c.length?c.map(k=>`<div class=r><b>${k}</b><button onclick=startCP(${k})>Ab hier</button></div>`).join(""):"Noch keine.";$("#records").innerHTML=`<div class=r><b>Höchste Kachel</b><span>${REC.bestTile||"-"}</span></div><div class=r><b>Höchster Score</b><span>${REC.bestScore}</span></div>`;$("#runs").innerHTML=RUNS.length?RUNS.slice(0,12).map(r=>`<div class=r><b>${r.tile} · ${r.score}</b><span>${fmt(r.time)} · ${r.moves} Züge</span></div>`).join(""):"Noch keine abgeschlossenen Runs."}
-window.startCP=k=>{if(PAUSED)setPaused(false);if(S&&S.moves>0&&!S.runSaved)finishRun();S=clone(CP[k]);S.start=Date.now();S.startTile=+k;S.moves=0;S.score=0;S.marks={};S.undoCredits=0;S.ended=false;S.runSaved=false;H=[];$("#gameover").classList.add("hidden");renderBoard()};
+window.startCP=k=>{if(PAUSED)setPaused(false);if(S&&S.moves>0&&!S.runSaved)finishRun();S=clone(CP[k]);S.start=Date.now();S.startTile=+k;S.moves=0;S.score=0;S.marks={};S.undoCredits=0;S.ended=false;S.runSaved=false;S.win2048Shown=(+k>=2048);H=[];$("#gameover").classList.add("hidden");renderBoard()};
 $("#gameover-new").onclick=()=>newGame();document.addEventListener("selectstart",e=>{if(!e.target.closest("input,textarea"))e.preventDefault()});document.addEventListener("contextmenu",e=>{if(e.target.closest("#game,header,nav,.stats,.next"))e.preventDefault()});
 
 
@@ -204,6 +205,10 @@ $("#close").onclick=()=>{
   if(MENU_PAUSED){MENU_PAUSED=false;setPaused(false)}
   else if(PAUSED)$("#pauseOverlay").classList.remove("hidden");
 };
+function autoIsRunning(){return !!(window.AUTO_RUNNING||window.AUTO_ACTIVE)}
+function show2048Win(){if(autoIsRunning())return;if(!PAUSED)setPaused(true);$("#win2048").classList.remove("hidden")}
+$("#winContinue").onclick=()=>{$("#win2048").classList.add("hidden");if(PAUSED)setPaused(false)};
+$("#winNew").onclick=()=>{$("#win2048").classList.add("hidden");newGame()};
 $("#resumeContinue").onclick=()=>{
   hideResumePrompt();
   if(!RESUME_WAS_PAUSED&&PAUSED)setPaused(false);
@@ -233,7 +238,10 @@ addEventListener("pagehide",saveActive);
 
 function setTheme(t){THEME=["blue","original","deepblue"].includes(t)?t:"deepblue";document.body.dataset.theme=THEME;localStorage.setItem("2048pp_theme",THEME);document.querySelectorAll(".theme-btn").forEach(b=>b.classList.toggle("active",b.dataset.theme===THEME))}
 setTheme(THEME);document.querySelectorAll(".theme-btn").forEach(b=>b.onclick=()=>setTheme(b.dataset.theme));
-for(let i=0;i<16;i++){let e=document.createElement("div");e.className="cell";$("#grid").appendChild(e)}let x,y,G=$("#game");G.ontouchstart=e=>{if(PAUSED)return;x=e.touches[0].clientX;y=e.touches[0].clientY};G.ontouchend=e=>{if(PAUSED)return;let X=e.changedTouches[0].clientX-x,Y=e.changedTouches[0].clientY-y;if(Math.max(Math.abs(X),Math.abs(Y))<22)return;go(Math.abs(X)>Math.abs(Y)?(X>0?"R":"L"):(Y>0?"D":"U"))};
+for(let i=0;i<16;i++){let e=document.createElement("div");e.className="cell";$("#grid").appendChild(e)}let x,y,G=$("#game"),SWIPE_OK=false;
+const swipeBlocked=t=>!!t.closest("button,select,input,textarea,#panel,.resume-prompt,.win2048");
+document.addEventListener("touchstart",e=>{if(PAUSED||e.touches.length!==1||swipeBlocked(e.target)){SWIPE_OK=false;return}SWIPE_OK=true;x=e.touches[0].clientX;y=e.touches[0].clientY},{passive:true});
+document.addEventListener("touchend",e=>{if(!SWIPE_OK||PAUSED){SWIPE_OK=false;return}SWIPE_OK=false;let X=e.changedTouches[0].clientX-x,Y=e.changedTouches[0].clientY-y;if(Math.max(Math.abs(X),Math.abs(Y))<22)return;go(Math.abs(X)>Math.abs(Y)?(X>0?"R":"L"):(Y>0?"D":"U"))},{passive:true});
 let ACTIVE=loadActive();
 if(ACTIVE&&ACTIVE.state&&ACTIVE.state.moves>0){
   S=ACTIVE.state;H=Array.isArray(ACTIVE.history)?ACTIVE.history:[];

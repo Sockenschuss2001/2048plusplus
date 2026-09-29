@@ -1,4 +1,4 @@
-<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="2048++"><meta name="theme-color" content="#eef5fb"><link rel="apple-touch-icon" sizes="180x180" href="icon-180.png"><link rel="icon" type="image/png" sizes="192x192" href="icon-192.png"><link rel="icon" type="image/png" sizes="512x512" href="icon-512.png"><link rel="shortcut icon" href="favicon.png"><link rel="manifest" href="manifest.webmanifest"><link rel="stylesheet" href="style.css"><title>2048++ v0.5.5</title></head><body><main>
+<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="2048++"><meta name="theme-color" content="#eef5fb"><link rel="apple-touch-icon" sizes="180x180" href="icon-180.png"><link rel="icon" type="image/png" sizes="192x192" href="icon-192.png"><link rel="icon" type="image/png" sizes="512x512" href="icon-512.png"><link rel="shortcut icon" href="favicon.png"><link rel="manifest" href="manifest.webmanifest"><link rel="stylesheet" href="style.css"><title>2048++ v0.5.6</title></head><body><main>
 <header><div class="brand"><b>2048</b><span>++</span></div><div class="score"><small>SCORE</small><b id="score">0</b></div><div class="score"><small>BEST</small><b id="best">0</b></div></header>
 <div class="sub"><span>Nächstes Ziel: <b id="goal">128</b></span></div>
 <nav><button id="undoBtn" class="undo-btn" onclick="undo()"><svg class="undo-icon" viewBox="0 0 32 32" aria-hidden="true"><path d="M13 7 5 15l8 8v-5h6c4.5 0 7 2.2 8 7 1.2-8.5-2.8-13-8-13h-6V7Z"/></svg><span id="undoCount">0</span></button><button disabled>AUTO</button><button id="coachBtn">COACH</button><button id="pauseBtn" aria-label="Pause">Ⅱ</button><button id="menu">☰</button></nav>
@@ -9,7 +9,7 @@
   <div id="coachMoves" class="coach-moves"></div>
   <small id="coachWhy"></small>
 </section><section id="nextCard" class="next"><label><b>NEXT</b><select id="preview"><option value="off">Aus</option><option value="value">Wert</option><option value="full">Wert + Position</option></select></label><div id="next"></div></section>
-<aside id="panel" class="hidden"><h2>2048++ <small>v0.5.5</small></h2><div class="actions"><button onclick="newGame()">Neues Spiel</button></div><h3>Farbschema</h3><div class="theme-row"><button class="theme-btn" data-theme="blue">Blau</button><button class="theme-btn" data-theme="original">Standard</button><button class="theme-btn" data-theme="deepblue">Dunkelblau</button></div><h3>Spiel</h3>
+<aside id="panel" class="hidden"><h2>2048++ <small>v0.5.6</small></h2><div class="actions"><button onclick="newGame()">Neues Spiel</button></div><h3>Farbschema</h3><div class="theme-row"><button class="theme-btn" data-theme="blue">Blau</button><button class="theme-btn" data-theme="original">Standard</button><button class="theme-btn" data-theme="deepblue">Dunkelblau</button></div><h3>Spiel</h3>
 <div class="setting-row"><b>Slide</b><select id="slideSpeed"><option value="50">Sehr schnell</option><option value="90">Schnell</option><option value="140">Normal</option><option value="220">Langsam</option></select></div>
 <div class="setting-row"><b>NEXT-Hilfe</b><select id="nextLimit"><option value="0">Ausblenden</option><option value="4">≤ 4 freie Felder</option><option value="6">≤ 6 freie Felder</option><option value="8">≤ 8 freie Felder</option><option value="16">Immer</option></select></div><h3>Meilensteine & Rekorde</h3>
 <div class="milestone-summary">
@@ -33,7 +33,10 @@
     <div id="gameover-score"></div>
     <button id="gameover-new">Neues Spiel</button>
   </div>
-</div><div id="resumePrompt" class="resume-prompt hidden" role="dialog" aria-modal="true" aria-labelledby="resume-title">
+</div><div id="win2048" class="win2048 hidden" role="dialog" aria-modal="true">
+<div class="win2048-card"><h2>Hurra!</h2><p>Du hast die Kachel <b>2048</b> erreicht.</p>
+<p>Möchtest Du weitermachen oder ein neues Spiel starten?</p>
+<div class="win2048-actions"><button id="winContinue">Weitermachen</button><button id="winNew">Neues Spiel</button></div></div></div><div id="resumePrompt" class="resume-prompt hidden" role="dialog" aria-modal="true" aria-labelledby="resume-title">
   <div class="resume-card">
     <h2 id="resume-title">Spiel fortsetzen?</h2>
     <div id="resumeInfo">Ein laufendes Spiel wurde gefunden.</div>

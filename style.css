@@ -239,3 +239,7 @@ nav{
 .resume-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .resume-actions button{min-height:54px}
 .resume-card small{display:block;margin-top:13px;opacity:.62;line-height:1.35}
+
+/* v0.5.6 */
+html,body,main{overscroll-behavior:none}
+.win2048{position:fixed;inset:0;z-index:125;display:flex;align-items:center;justify-content:center;padding:22px;background:rgba(19,42,58,.38);-webkit-backdrop-filter:blur(5px);backdrop-filter:blur(5px)}.win2048.hidden{display:none!important}.win2048-card{width:min(390px,100%);background:#fff;color:var(--ink);border-radius:22px;padding:25px 20px;box-shadow:0 18px 50px rgba(0,0,0,.22);text-align:center}.win2048-card h2{font-size:30px;margin:0 0 12px}.win2048-card p{font-size:17px;line-height:1.4;margin:8px 0}.win2048-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:20px}.win2048-actions button{min-height:55px}

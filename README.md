@@ -1,10 +1,8 @@
-# 2048++ v0.5.5
-
-- Laufendes Spiel wird lokal als aktiver Spielstand gespeichert.
-- Bei einem iOS/PWA-Neustart wird ein bis zu 48 Stunden alter Spielstand erkannt.
-- Auswahl: „Fortsetzen“ oder „Neues Spiel“.
-- Board, Score, Züge, Undo-Historie, Meilensteine und RNG-Zustand werden wiederhergestellt.
-- Zeit im Hintergrund zählt nicht als Spielzeit.
-- Wenn die App länger als 30 Sekunden im Hintergrund war und noch im Speicher lebt, erscheint beim Zurückkehren ebenfalls die Fortsetzen/Neues-Spiel-Auswahl.
-- Nach 48 Stunden verfällt nur der aktive Wiederaufnahme-Spielstand; Historie, Rekorde und Checkpoints bleiben erhalten.
-- Der Service-Worker-Dateicache ist davon unabhängig und war nicht die Ursache für das neue Spiel.
+# 2048++ v0.5.6
+- Wischgesten links/rechts/oben/unten auf der gesamten freien App-Fläche, auch unterhalb des Spielfelds.
+- Buttons, Selects, Menü und Dialoge sind von der globalen Gestenerkennung ausgenommen.
+- Beim erstmaligen Erreichen von 2048 erscheint: „Hurra! Du hast die Kachel 2048 erreicht.“ mit Weitermachen / Neues Spiel.
+- Der Dialog pausiert das manuelle Spiel.
+- Pro Lauf erscheint er höchstens einmal.
+- Ein Start ab einem 2048+-Checkpoint löst ihn nicht erneut aus.
+- Für AUTO ist die 2048-Einblendung so vorbereitet, dass sie bei aktivem Automatiklauf übersprungen wird.
