@@ -5,6 +5,7 @@ let SLIDE=+(localStorage.getItem("2048pp_slide")||140);
 let NEXTLIMIT=+(localStorage.getItem("2048pp_nextlimit")||0);
 let AUTODELAY=+(localStorage.getItem("2048pp_autospeed")||100);
 let AUTODEPTH=+(localStorage.getItem("2048pp_autodepth")||3);
+let AUTOSTRATEGY=localStorage.getItem("2048pp_autostrategy")||"balanced";
 let AUTO_RUNNING=false,AUTO_TIMER=0;
 window.AUTO_RUNNING=false;
 const clone=x=>JSON.parse(JSON.stringify(x));
@@ -111,9 +112,25 @@ function monotonicity(b){
     score+=Math.max(inc,dec);
   } return score;
 }
-function boardScore(state,gain=0){
-  let b=state.b,free=empty(b).length,merges=mergePotential(b),smooth=smoothPenalty(b),mono=monotonicity(b);
-  return {score:free*32+merges*13+cornerBonus(b)+mono*1.8-smooth*2.2+(gain||0)*.035,free,merges};
+function boardScore(state,gain=0,strategy=AUTOSTRATEGY){
+  let b=state.b,free=empty(b).length,merges=mergePotential(b),smooth=smoothPenalty(b),mono=monotonicity(b),corner=cornerBonus(b);
+  let score;
+  switch(strategy){
+    case "survival":
+      score=free*52+merges*10+corner*.85+mono*1.45-smooth*1.65+(gain||0)*.018;
+      break;
+    case "corner":
+      score=free*27+merges*10+corner*1.75+mono*3.15-smooth*2.55+(gain||0)*.022;
+      break;
+    case "score":
+      score=free*22+merges*20+corner*.75+mono*1.25-smooth*1.55+(gain||0)*.085;
+      break;
+    case "fast":
+    case "balanced":
+    default:
+      score=free*32+merges*13+corner+mono*1.8-smooth*2.2+(gain||0)*.035;
+  }
+  return {score,free,merges};
 }
 function coachEval(depth=1,state=S){
   let out=[];
@@ -170,6 +187,9 @@ function exChance(state,depth,ctx){
   ctx.cache.set(key,v);return v;
 }
 function expectimaxEval(maxDepth,state=S){
+  if(AUTOSTRATEGY==="fast"){
+    let a=coachEval(1,state);a.depth=1;return a;
+  }
   let budget=AUTODELAY<=20?42:AUTODELAY<=100?70:AUTODELAY<=250?100:140;
   let deadline=performance.now()+budget,best=coachEval(1,state),completed=0;
   for(let depth=1;depth<=maxDepth;depth++){
@@ -191,7 +211,7 @@ function expectimaxEval(maxDepth,state=S){
 function setAutoUi(){
   let b=$("#autoBtn");if(!b)return;
   b.classList.toggle("active",AUTO_RUNNING);
-  b.textContent=AUTO_RUNNING?`AUTO E${AUTODEPTH} ■`:"AUTO";
+  b.textContent=AUTO_RUNNING?`AUTO ${AUTOSTRATEGY==="fast"?"1":AUTODEPTH}× Ⅱ`:"AUTO";
 }
 function stopAuto(update=true){
   AUTO_RUNNING=false;window.AUTO_RUNNING=false;
@@ -208,7 +228,8 @@ function autoStep(){
   if(!AUTO_RUNNING||PAUSED||lock||S.ended)return;
   let a=expectimaxEval(AUTODEPTH);
   if(!a.length){showGameOver();return}
-  S.autoUsed=true;S.autoDepth=AUTODEPTH;S.autoActualDepth=a.depth||1;S.autoSolver="Expectimax";
+  S.autoUsed=true;S.autoDepth=AUTOSTRATEGY==="fast"?1:AUTODEPTH;S.autoActualDepth=a.depth||1;
+  S.autoSolver=AUTOSTRATEGY==="fast"?"Heuristik":"Expectimax";S.autoStrategy=AUTOSTRATEGY;
   go(a[0].d);
 }
 function toggleAuto(){
@@ -252,7 +273,7 @@ function renderHistory(){
 function finishRun(){
   if(S.runSaved)return;
   S.runSaved=true;
-  RUNS.unshift({ended:Date.now(),tile:maxTile(),score:S.score,moves:S.moves,time:Date.now()-S.start,startTile:S.startTile||2,autoUsed:!!S.autoUsed,autoDepth:S.autoDepth||0,autoActualDepth:S.autoActualDepth||0,autoSolver:S.autoSolver||"",milestones:Object.keys(S.marks||{}).map(Number)});
+  RUNS.unshift({ended:Date.now(),tile:maxTile(),score:S.score,moves:S.moves,time:Date.now()-S.start,startTile:S.startTile||2,autoUsed:!!S.autoUsed,autoDepth:S.autoDepth||0,autoActualDepth:S.autoActualDepth||0,autoSolver:S.autoSolver||"",autoStrategy:S.autoStrategy||"",milestones:Object.keys(S.marks||{}).map(Number)});
   RUNS=RUNS.slice(0,100); save("runs",RUNS); renderHistory();
 }
 function fmtMilestoneTime(ms){
@@ -295,10 +316,12 @@ $("#preview").value=["off","value","full"].includes(PREF)?PREF:"off";
 $("#slideSpeed").value=String([50,90,140,220].includes(SLIDE)?SLIDE:140);
 $("#autoSpeed").value=String([20,100,250,500].includes(AUTODELAY)?AUTODELAY:100);
 $("#autoDepth").value=String([1,2,3,4].includes(AUTODEPTH)?AUTODEPTH:3);
+$("#autoStrategy").value=["balanced","survival","corner","score","fast"].includes(AUTOSTRATEGY)?AUTOSTRATEGY:"balanced";
 $("#nextLimit").value=String([0,4,6,8,16].includes(NEXTLIMIT)?NEXTLIMIT:0);
 $("#slideSpeed").onchange=e=>{SLIDE=+e.target.value;localStorage.setItem("2048pp_slide",SLIDE)};
 $("#autoSpeed").onchange=e=>{AUTODELAY=+e.target.value;localStorage.setItem("2048pp_autospeed",AUTODELAY);if(AUTO_RUNNING)autoSchedule()};
 $("#autoDepth").onchange=e=>{AUTODEPTH=+e.target.value;localStorage.setItem("2048pp_autodepth",AUTODEPTH);setAutoUi();if(AUTO_RUNNING)autoSchedule()};
+$("#autoStrategy").onchange=e=>{AUTOSTRATEGY=e.target.value;localStorage.setItem("2048pp_autostrategy",AUTOSTRATEGY);setAutoUi();if(AUTO_RUNNING)autoSchedule()};
 $("#nextLimit").onchange=e=>{NEXTLIMIT=+e.target.value;localStorage.setItem("2048pp_nextlimit",NEXTLIMIT);stats()};$("#preview").onchange=e=>{localStorage.setItem("2048pp_preview",e.target.value);stats()};$("#menu").onclick=()=>{
   MENU_PAUSED=!PAUSED;
   if(MENU_PAUSED)setPaused(true);

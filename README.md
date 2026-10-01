@@ -1,19 +1,17 @@
-# 2048++ v0.7.0 — Expectimax
+# 2048++ v0.7.1
 
-## Solver
-- AUTO verwendet jetzt Expectimax statt der rein deterministischen Mehrzug-Vorausschau.
-- Nach jedem simulierten Zug wird ein CHANCE-Knoten ausgewertet:
-  - neue `2` mit 90 %
-  - neue `4` mit 10 %
-  - mögliche freie Positionen werden berücksichtigt.
-- Expectimax-Tiefe 1–4 bleibt im Menü wählbar; Standard ist 3.
-- Für iPhone-Performance verwendet der Solver iteratives Vertiefen, ein Zeitbudget und bei vielen freien Feldern eine deterministische Stichprobe von bis zu 6 Spawn-Positionen.
-- AUTO-Button zeigt `AUTO E3 ■` usw.
-- COACH bleibt weiterhin die schnelle unmittelbare Bewertung.
+## Wechselbare AUTO-Strategien
+- Ausgewogen: Expectimax mit dem bisherigen Kompromiss aus freien Feldern, Ordnung, Merge-Chancen und Score.
+- Überleben: gewichtet freie Felder deutlich stärker; soll volle/gefährliche Boards vermeiden.
+- Ecke / Ordnung: gewichtet Corner-Bonus und Monotonie stärker; große Kacheln sollen stabiler in einer Ecke bleiben.
+- Punkte / Merge: aggressivere Bewertung unmittelbarer Merges und Punkte.
+- Schnell: reine 1-Zug-Heuristik ohne Expectimax; geringste Rechenlast.
 
-## Korrekturen
-- Abstand zwischen Undo und AUTO sowie zwischen allen fünf Navigationsbuttons ist jetzt explizit einheitlich.
-- Ursache des fehlenden Abstands auf schmalen Displays behoben: die alte `min-width` des Undo-Buttons konnte in den Grid-Abstand hineinragen.
-- Bei Game Over wird AUTO jetzt vollständig gestoppt UND der Button sofort visuell zurückgesetzt.
-- Dadurch ist nach „Neues Spiel“ nur noch ein Tastendruck auf AUTO nötig.
-- Auch bei manuellem Neustart oder Checkpoint-Start wird der AUTO-Zustand sauber zurückgesetzt.
+Die Expectimax-Tiefe 1–4 bleibt separat wählbar und gilt für alle Strategien außer „Schnell“.
+
+## AUTO-Button
+- Aktiv wieder im gewünschten Format: `AUTO 3× Ⅱ`.
+- Kein `E3` und kein kleines Rechteck mehr.
+- Bei „Schnell“ zeigt er `AUTO 1× Ⅱ`.
+
+Alle Strategien werden persistent gespeichert und können auch während eines laufenden AUTO-Spiels gewechselt werden.

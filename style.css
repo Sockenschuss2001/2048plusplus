@@ -283,3 +283,10 @@ nav{
   .undo-btn{min-width:0!important;width:100%!important}
 }
 #autoBtn.active{font-size:11px!important;letter-spacing:-.35px}
+
+/* v0.7.1 — AUTO strategy selector / clearer active label */
+#autoBtn.active{
+  font-size:11px!important;
+  letter-spacing:-.45px!important;
+  white-space:nowrap!important;
+}
