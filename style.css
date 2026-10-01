@@ -266,3 +266,20 @@ html,body,main{overscroll-behavior:none}
 
 /* v0.6.1 — AUTO lookahead */
 #autoBtn.active{font-size:12px!important;letter-spacing:-.2px}
+
+/* v0.7.0 — AUTO spacing + state cleanup */
+nav{
+  column-gap:8px!important;
+  gap:8px!important;
+}
+.undo-btn{
+  min-width:0!important;
+  width:100%!important;
+  box-sizing:border-box!important;
+}
+#autoBtn{box-sizing:border-box!important}
+@media(max-width:390px){
+  nav{column-gap:8px!important;gap:8px!important}
+  .undo-btn{min-width:0!important;width:100%!important}
+}
+#autoBtn.active{font-size:11px!important;letter-spacing:-.35px}

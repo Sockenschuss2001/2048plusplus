@@ -56,13 +56,13 @@ function place(e,r,c,g){let p=g[r*4+c];e.style.left=p.x+"px";e.style.top=p.y+"px
 function renderBoard(){saveActive();let L=$("#tiles"),g=geom();L.innerHTML="";for(let r=0;r<4;r++)for(let c=0;c<4;c++){let q=S.b[r][c];if(!q.v)continue;let e=document.createElement("div");e.dataset.id=q.id;e.className=`tile ${q.v<=16384?"v"+q.v:"high"}`;e.textContent=q.v;place(e,r,c,g);L.appendChild(e)}stats()}
 function canMove(){for(let d of["L","R","U","D"])if(move(S,d))return true;return false}
 function scorePop(gain){if(!gain)return;let box=$("#score").parentElement,e=document.createElement("div");e.className="score-pop";e.textContent="+"+gain;box.appendChild(e);setTimeout(()=>e.remove(),700)}
-function showGameOver(){if(S.ended)return;stopAuto(false);S.ended=true;localStorage.removeItem(ACTIVE_KEY);finishRun();$("#gameover-score").textContent=`Score ${S.score} · ${S.moves} Züge`;$("#gameover").classList.remove("hidden");stats()}
+function showGameOver(){if(S.ended)return;stopAuto(true);S.ended=true;localStorage.removeItem(ACTIVE_KEY);finishRun();$("#gameover-score").textContent=`Score ${S.score} · ${S.moves} Züge`;$("#gameover").classList.remove("hidden");stats()}
 function animate(q){let old=new Map([...$("#tiles").children].map(x=>[+x.dataset.id,x])),g=geom();for(let m of q.anim){let e=old.get(m.id);if(!e)continue;if(m.merge){e.textContent=m.target;e.className=`tile ${m.target<=16384?"v"+m.target:"high"}`}place(e,m.r,m.c,g)}setTimeout(()=>{S=q.n;spawn(S);milestones();renderBoard();scorePop(q.gain);lock=0;if(!canMove())showGameOver();else autoSchedule()},SLIDE)}
 function maxTile(){return Math.max(...S.b.flat().map(x=>x.v))}
 function milestones(){let m=maxTile();for(let p=128;p<=m;p*=2)if(!S.marks[p]){let x={t:Date.now()-S.start,m:S.moves};S.marks[p]=x;S.undoCredits=(S.undoCredits||0)+1;CP[p]=clone(S);if(!REC.fastest[p]||x.t<REC.fastest[p])REC.fastest[p]=x.t;if(!REC.fewest[p]||x.m<REC.fewest[p])REC.fewest[p]=x.m;REC.bestTile=Math.max(REC.bestTile,p);save("cp",CP);save("records",REC)}
 if(S.marks&&S.marks[2048]&&!S.win2048Shown){S.win2048Shown=true;saveActive();setTimeout(show2048Win,Math.max(80,SLIDE||90))}}
 function go(d){if(lock)return;let q=move(S,d);if(!q)return;lock=1;H.push(clone(S));if(H.length>200)H.shift();animate(q)}
-window.undo=()=>{if(lock||!H.length||(S.undoCredits||0)<=0)return;let credits=S.undoCredits-1,marks=S.marks,ended=S.ended;S=H.pop();S.undoCredits=credits;S.marks=marks;S.ended=false;$("#gameover").classList.add("hidden");renderBoard()};window.newGame=()=>{stopAuto(false);hideResumePrompt();localStorage.removeItem(ACTIVE_KEY);if(PAUSED)setPaused(false);MENU_PAUSED=false;if(S&&S.moves>0&&!S.runSaved)finishRun();S=fresh();H=[];$("#gameover").classList.add("hidden");$("#panel").classList.add("hidden");renderBoard()}
+window.undo=()=>{if(lock||!H.length||(S.undoCredits||0)<=0)return;let credits=S.undoCredits-1,marks=S.marks,ended=S.ended;S=H.pop();S.undoCredits=credits;S.marks=marks;S.ended=false;$("#gameover").classList.add("hidden");renderBoard()};window.newGame=()=>{stopAuto(true);hideResumePrompt();localStorage.removeItem(ACTIVE_KEY);if(PAUSED)setPaused(false);MENU_PAUSED=false;if(S&&S.moves>0&&!S.runSaved)finishRun();S=fresh();H=[];$("#gameover").classList.add("hidden");$("#panel").classList.add("hidden");renderBoard()}
 function fmt(x){let s=x/1000|0,h=s/3600|0,m=(s%3600)/60|0,ss=s%60;return(h?h+":":"")+String(m).padStart(2,"0")+":"+String(ss).padStart(2,"0")}
 function preview(){let mode=$("#preview").value,free=empty(S.b).length;if(!NEXTLIMIT||free>NEXTLIMIT||mode=="off")return"";if(mode=="value"){let q=clone(S.rng);return"Nächster Wert: "+(rnd(q)<.9?2:4)}let out=[],sy={L:"←",R:"→",U:"↑",D:"↓"};for(let d of["L","R","U","D"]){let z=move(S,d);if(!z)continue;let e=empty(z.n.b),q=clone(z.n.rng),p=e[Math.floor(rnd(q)*e.length)],v=rnd(q)<.9?2:4;out.push(`${sy[d]} ${v} @ ${String.fromCharCode(65+p[1])}${p[0]+1}`)}return out.join(" · ")}
 function stats(){REC.bestScore=Math.max(REC.bestScore,S.score);REC.bestTile=Math.max(REC.bestTile,maxTile());save("records",REC);$("#score").textContent=S.score;$("#best").textContent=REC.bestScore;$("#moves").textContent=S.moves;let ub=$("#undoBtn"),uc=S.undoCredits||0;$("#undoCount").textContent=uc;ub.disabled=!H.length||uc<=0;$("#free").textContent=empty(S.b).length;let mx=maxTile(),g=128;while(g<=mx)g*=2;$("#goal").textContent=g;
@@ -70,7 +70,7 @@ let freeNow=empty(S.b).length, nextEnabled=NEXTLIMIT>0&&freeNow<=NEXTLIMIT;
 $("#nextCard").classList.toggle("hidden",NEXTLIMIT===0);
 $("#preview").disabled=!nextEnabled;
 $("#next").textContent=nextEnabled?preview():"";renderMilestones();renderHistory();renderCoach();let a=Object.entries(S.marks);$("#marks").innerHTML=a.length?a.map(([k,v])=>`<div class=r><b>${k}</b><span>${fmt(v.t)} · Zug ${v.m}</span></div>`).join(""):"Noch keine.";let c=Object.keys(CP).map(Number).sort((a,b)=>a-b);$("#cps").innerHTML=c.length?c.map(k=>`<div class=r><b>${k}</b><button onclick=startCP(${k})>Ab hier</button></div>`).join(""):"Noch keine.";$("#records").innerHTML=`<div class=r><b>Höchste Kachel</b><span>${REC.bestTile||"-"}</span></div><div class=r><b>Höchster Score</b><span>${REC.bestScore}</span></div>`;$("#runs").innerHTML=RUNS.length?RUNS.slice(0,12).map(r=>`<div class=r><b>${r.tile} · ${r.score}</b><span>${fmt(r.time)} · ${r.moves} Züge</span></div>`).join(""):"Noch keine abgeschlossenen Runs."}
-window.startCP=k=>{stopAuto(false);if(PAUSED)setPaused(false);if(S&&S.moves>0&&!S.runSaved)finishRun();S=clone(CP[k]);S.start=Date.now();S.startTile=+k;S.moves=0;S.score=0;S.marks={};S.undoCredits=0;S.ended=false;S.runSaved=false;S.win2048Shown=(+k>=2048);H=[];$("#gameover").classList.add("hidden");renderBoard()};
+window.startCP=k=>{stopAuto(true);if(PAUSED)setPaused(false);if(S&&S.moves>0&&!S.runSaved)finishRun();S=clone(CP[k]);S.start=Date.now();S.startTile=+k;S.moves=0;S.score=0;S.marks={};S.undoCredits=0;S.ended=false;S.runSaved=false;S.win2048Shown=(+k>=2048);H=[];$("#gameover").classList.add("hidden");renderBoard()};
 $("#gameover-new").onclick=()=>newGame();document.addEventListener("selectstart",e=>{if(!e.target.closest("input,textarea"))e.preventDefault()});document.addEventListener("contextmenu",e=>{if(e.target.closest("#game,header,nav,.stats,.next"))e.preventDefault()});
 
 
@@ -115,32 +115,83 @@ function boardScore(state,gain=0){
   let b=state.b,free=empty(b).length,merges=mergePotential(b),smooth=smoothPenalty(b),mono=monotonicity(b);
   return {score:free*32+merges*13+cornerBonus(b)+mono*1.8-smooth*2.2+(gain||0)*.035,free,merges};
 }
-function lookahead(state,depth){
-  if(depth<=0)return boardScore(state).score;
-  let best=-Infinity,valid=false;
-  for(let d of ["L","D","R","U"]){
-    let q=move(state,d);if(!q)continue;valid=true;
-    let base=boardScore(q.n,q.gain).score;
-    let future=depth>1?lookahead(q.n,depth-1):0;
-    let v=base+(depth>1?future*.72:0);
-    if(v>best)best=v;
-  }
-  return valid?best:boardScore(state).score-5000;
-}
 function coachEval(depth=1,state=S){
   let out=[];
   for(let d of ["L","D","R","U"]){
     let q=move(state,d);if(!q)continue;
-    let h=boardScore(q.n,q.gain),future=depth>1?lookahead(q.n,depth-1):0;
-    out.push({d,score:h.score+(depth>1?future*.72:0),free:h.free,merges:h.merges,gain:q.gain||0});
+    let h=boardScore(q.n,q.gain);
+    out.push({d,score:h.score,free:h.free,merges:h.merges,gain:q.gain||0});
   }
   return out.sort((a,b)=>b.score-a.score);
+}
+
+/* Expectimax: MAX = unser Zug, CHANCE = zufällige neue 2/4-Kachel.
+   Auf dem iPhone wird mit Zeitbudget + deterministischer Stichprobe gerechnet,
+   damit auch Tiefe 4 die Oberfläche nicht minutenlang blockiert. */
+function boardKey(state){return state.b.flat().map(x=>x.v||0).join(",")}
+function chanceSample(cells,max=6){
+  if(cells.length<=max)return cells;
+  let out=[],used=new Set();
+  for(let i=0;i<max;i++){
+    let n=Math.round(i*(cells.length-1)/(max-1));
+    if(!used.has(n)){used.add(n);out.push(cells[n])}
+  }
+  return out;
+}
+function exLeaf(state){return boardScore(state).score}
+function exMax(state,depth,ctx){
+  if(depth<=0||performance.now()>=ctx.deadline)return exLeaf(state);
+  let key="M"+depth+"|"+boardKey(state),hit=ctx.cache.get(key);
+  if(hit!==undefined)return hit;
+  let best=-Infinity,valid=false;
+  for(let d of ["L","D","R","U"]){
+    let q=move(state,d);if(!q)continue;valid=true;
+    let v=(q.gain||0)*.035+exChance(q.n,depth-1,ctx);
+    if(v>best)best=v;
+    if(performance.now()>=ctx.deadline)break;
+  }
+  if(!valid)best=exLeaf(state)-5000;
+  ctx.cache.set(key,best);return best;
+}
+function exChance(state,depth,ctx){
+  if(performance.now()>=ctx.deadline)return exLeaf(state);
+  let cells=empty(state.b);
+  if(!cells.length)return exMax(state,depth,ctx);
+  let key="C"+depth+"|"+boardKey(state),hit=ctx.cache.get(key);
+  if(hit!==undefined)return hit;
+  let sample=chanceSample(cells,6),sum=0;
+  for(let [r,c] of sample){
+    let s2=clone(state);s2.b[r][c]={v:2,id:0};
+    let s4=clone(state);s4.b[r][c]={v:4,id:0};
+    sum+=.9*exMax(s2,depth,ctx)+.1*exMax(s4,depth,ctx);
+    if(performance.now()>=ctx.deadline)break;
+  }
+  let v=sum/Math.max(1,sample.length);
+  ctx.cache.set(key,v);return v;
+}
+function expectimaxEval(maxDepth,state=S){
+  let budget=AUTODELAY<=20?42:AUTODELAY<=100?70:AUTODELAY<=250?100:140;
+  let deadline=performance.now()+budget,best=coachEval(1,state),completed=0;
+  for(let depth=1;depth<=maxDepth;depth++){
+    let ctx={deadline,cache:new Map()},out=[];
+    for(let d of ["L","D","R","U"]){
+      let q=move(state,d);if(!q)continue;
+      let h=boardScore(q.n,q.gain);
+      let score=(q.gain||0)*.035+exChance(q.n,depth-1,ctx);
+      out.push({d,score,free:h.free,merges:h.merges,gain:q.gain||0});
+      if(performance.now()>=deadline)break;
+    }
+    if(performance.now()>=deadline||!out.length)break;
+    best=out.sort((a,b)=>b.score-a.score);completed=depth;
+  }
+  best.depth=completed||1;
+  return best;
 }
 
 function setAutoUi(){
   let b=$("#autoBtn");if(!b)return;
   b.classList.toggle("active",AUTO_RUNNING);
-  b.textContent=AUTO_RUNNING?`AUTO ${AUTODEPTH}× ■`:"AUTO";
+  b.textContent=AUTO_RUNNING?`AUTO E${AUTODEPTH} ■`:"AUTO";
 }
 function stopAuto(update=true){
   AUTO_RUNNING=false;window.AUTO_RUNNING=false;
@@ -155,9 +206,9 @@ function autoSchedule(){
 function autoStep(){
   AUTO_TIMER=0;
   if(!AUTO_RUNNING||PAUSED||lock||S.ended)return;
-  let a=coachEval(AUTODEPTH);
+  let a=expectimaxEval(AUTODEPTH);
   if(!a.length){showGameOver();return}
-  S.autoUsed=true;S.autoDepth=AUTODEPTH;
+  S.autoUsed=true;S.autoDepth=AUTODEPTH;S.autoActualDepth=a.depth||1;S.autoSolver="Expectimax";
   go(a[0].d);
 }
 function toggleAuto(){
@@ -195,13 +246,13 @@ function renderHistory(){
   box.innerHTML=runs.length?runs.slice(0,20).map((r,i)=>`<div class="run-row">
     <div><b>${r.tile||2}</b><small>${fmtRunDate(r.ended||r.date||r.ts)}</small></div>
     <span>Score <b>${r.score||0}</b></span><span>${r.moves||0} Z.</span><span>${fmtRunTime(r.time)}</span>
-    <small>${r.autoUsed?((r.startTile||2)>2?"AUTO "+(r.autoDepth||1)+"× · Checkpoint "+r.startTile:"AUTO "+(r.autoDepth||1)+"×") : ((r.startTile||2)>2?"Checkpoint "+r.startTile:"Normal")}</small>
+    <small>${r.autoUsed?((r.startTile||2)>2?"AUTO "+(r.autoDepth||1)+"× · Checkpoint "+r.startTile:"AUTO E"+(r.autoDepth||1)) : ((r.startTile||2)>2?"Checkpoint "+r.startTile:"Normal")}</small>
   </div>`).join(""):`<div class="history-empty">Noch keine abgeschlossenen Spiele.</div>`;
 }
 function finishRun(){
   if(S.runSaved)return;
   S.runSaved=true;
-  RUNS.unshift({ended:Date.now(),tile:maxTile(),score:S.score,moves:S.moves,time:Date.now()-S.start,startTile:S.startTile||2,autoUsed:!!S.autoUsed,autoDepth:S.autoDepth||0,milestones:Object.keys(S.marks||{}).map(Number)});
+  RUNS.unshift({ended:Date.now(),tile:maxTile(),score:S.score,moves:S.moves,time:Date.now()-S.start,startTile:S.startTile||2,autoUsed:!!S.autoUsed,autoDepth:S.autoDepth||0,autoActualDepth:S.autoActualDepth||0,autoSolver:S.autoSolver||"",milestones:Object.keys(S.marks||{}).map(Number)});
   RUNS=RUNS.slice(0,100); save("runs",RUNS); renderHistory();
 }
 function fmtMilestoneTime(ms){
