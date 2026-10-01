@@ -263,3 +263,6 @@ html,body,main{overscroll-behavior:none}
   filter:brightness(1.08);
   font-weight:900;
 }
+
+/* v0.6.1 — AUTO lookahead */
+#autoBtn.active{font-size:12px!important;letter-spacing:-.2px}
