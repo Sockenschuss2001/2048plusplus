@@ -290,3 +290,26 @@ nav{
   letter-spacing:-.45px!important;
   white-space:nowrap!important;
 }
+
+/* v0.7.2 — AUTO strategy comparison */
+.strategy-compare{
+  overflow-x:auto;-webkit-overflow-scrolling:touch;
+  border:1px solid rgba(55,85,105,.16);border-radius:14px;margin:8px 0 6px;
+}
+.strategy-head,.strategy-row{
+  display:grid;grid-template-columns:132px 58px 64px 68px 88px 88px 70px;
+  min-width:568px;align-items:center;
+}
+.strategy-head{
+  font-size:10px;font-weight:800;opacity:.62;
+  padding:8px 9px;border-bottom:1px solid rgba(55,85,105,.12);
+}
+.strategy-row{padding:9px;border-bottom:1px solid rgba(55,85,105,.09)}
+.strategy-row:last-child{border-bottom:0}
+.strategy-row>span{display:flex;flex-direction:column;gap:2px;text-align:right}
+.strategy-row>span small{font-size:9px;opacity:.55}
+.strategy-row>span b{font-size:12px}
+.strategy-name{display:flex;flex-direction:column;gap:2px}
+.strategy-name b{font-size:12px}.strategy-name small{font-size:9px;opacity:.58}
+.strategy-row.secondary{opacity:.68}
+.strategy-note{display:block;opacity:.6;line-height:1.35;margin-bottom:12px}

@@ -230,6 +230,8 @@ function autoStep(){
   if(!a.length){showGameOver();return}
   S.autoUsed=true;S.autoDepth=AUTOSTRATEGY==="fast"?1:AUTODEPTH;S.autoActualDepth=a.depth||1;
   S.autoSolver=AUTOSTRATEGY==="fast"?"Heuristik":"Expectimax";S.autoStrategy=AUTOSTRATEGY;
+  S.autoStrategiesUsed=S.autoStrategiesUsed||[];
+  if(!S.autoStrategiesUsed.includes(AUTOSTRATEGY))S.autoStrategiesUsed.push(AUTOSTRATEGY);
   go(a[0].d);
 }
 function toggleAuto(){
@@ -260,20 +262,67 @@ function fmtRunDate(ts){
   if(!ts)return "—";
   let d=new Date(ts); return d.toLocaleDateString("de-DE",{day:"2-digit",month:"2-digit"})+" "+d.toLocaleTimeString("de-DE",{hour:"2-digit",minute:"2-digit"});
 }
+const STRATEGY_NAMES={
+  balanced:"Ausgewogen",survival:"Überleben",corner:"Ecke / Ordnung",
+  score:"Punkte / Merge",fast:"Schnell",mixed:"Gemischt",legacy:"Früheres AUTO"
+};
+function runStrategyKey(r){
+  let used=Array.isArray(r.autoStrategiesUsed)?[...new Set(r.autoStrategiesUsed.filter(Boolean))]:[];
+  if(used.length>1)return "mixed";
+  if(used.length===1)return used[0];
+  return r.autoStrategy||"legacy";
+}
+function median(vals){
+  if(!vals.length)return 0;
+  let a=[...vals].sort((x,y)=>x-y),m=Math.floor(a.length/2);
+  return a.length%2?a[m]:Math.round((a[m-1]+a[m])/2);
+}
+function renderStrategyCompare(){
+  let box=$("#strategyCompare");if(!box)return;
+  let auto=(RUNS||[]).filter(r=>r.autoUsed);
+  if(!auto.length){
+    box.innerHTML='<div class="history-empty">Noch keine abgeschlossenen AUTO-Läufe zum Vergleichen.</div>';
+    return;
+  }
+  let order=["balanced","survival","corner","score","fast","mixed","legacy"];
+  let groups={};
+  for(let r of auto){let k=runStrategyKey(r);(groups[k]||(groups[k]=[])).push(r)}
+  let rows=order.filter(k=>groups[k]?.length).map(k=>{
+    let a=groups[k],n=a.length;
+    let avgScore=Math.round(a.reduce((x,r)=>x+(r.score||0),0)/n);
+    let avgMoves=Math.round(a.reduce((x,r)=>x+(r.moves||0),0)/n);
+    let bestScore=Math.max(...a.map(r=>r.score||0));
+    let bestTile=Math.max(...a.map(r=>r.tile||2));
+    let medTile=median(a.map(r=>r.tile||2));
+    let hit2048=a.filter(r=>(r.tile||0)>=2048||(r.milestones||[]).includes(2048)).length;
+    let rate=Math.round(hit2048/n*100);
+    return `<div class="strategy-row ${k==="mixed"||k==="legacy"?"secondary":""}">
+      <div class="strategy-name"><b>${STRATEGY_NAMES[k]||k}</b><small>${n} ${n===1?"Lauf":"Läufe"}</small></div>
+      <span><small>2048</small><b>${rate}%</b></span>
+      <span><small>Best</small><b>${bestTile}</b></span>
+      <span><small>Median</small><b>${medTile}</b></span>
+      <span><small>Ø Score</small><b>${avgScore}</b></span>
+      <span><small>Bestscore</small><b>${bestScore}</b></span>
+      <span><small>Ø Züge</small><b>${avgMoves}</b></span>
+    </div>`;
+  }).join("");
+  box.innerHTML=`<div class="strategy-head"><span>Strategie</span><span>2048</span><span>Best</span><span>Median</span><span>Ø Score</span><span>Bestscore</span><span>Ø Züge</span></div>${rows}`;
+}
 function renderHistory(){
   let box=$("#runHistory"); if(!box)return;
   let runs=RUNS||[], best=runs.reduce((a,r)=>Math.max(a,r.score||0),0), mx=runs.reduce((a,r)=>Math.max(a,r.tile||0),0);
   $("#runCount").textContent=runs.length; $("#historyBest").textContent=best; $("#historyMax").textContent=mx||"—";
+  renderStrategyCompare();
   box.innerHTML=runs.length?runs.slice(0,20).map((r,i)=>`<div class="run-row">
     <div><b>${r.tile||2}</b><small>${fmtRunDate(r.ended||r.date||r.ts)}</small></div>
     <span>Score <b>${r.score||0}</b></span><span>${r.moves||0} Z.</span><span>${fmtRunTime(r.time)}</span>
-    <small>${r.autoUsed?((r.startTile||2)>2?"AUTO "+(r.autoDepth||1)+"× · Checkpoint "+r.startTile:"AUTO E"+(r.autoDepth||1)) : ((r.startTile||2)>2?"Checkpoint "+r.startTile:"Normal")}</small>
+    <small>${r.autoUsed?("AUTO "+(r.autoDepth||1)+"× · "+(STRATEGY_NAMES[runStrategyKey(r)]||runStrategyKey(r))+((r.startTile||2)>2?" · Checkpoint "+r.startTile:"")) : ((r.startTile||2)>2?"Checkpoint "+r.startTile:"Normal")}</small>
   </div>`).join(""):`<div class="history-empty">Noch keine abgeschlossenen Spiele.</div>`;
 }
 function finishRun(){
   if(S.runSaved)return;
   S.runSaved=true;
-  RUNS.unshift({ended:Date.now(),tile:maxTile(),score:S.score,moves:S.moves,time:Date.now()-S.start,startTile:S.startTile||2,autoUsed:!!S.autoUsed,autoDepth:S.autoDepth||0,autoActualDepth:S.autoActualDepth||0,autoSolver:S.autoSolver||"",autoStrategy:S.autoStrategy||"",milestones:Object.keys(S.marks||{}).map(Number)});
+  RUNS.unshift({ended:Date.now(),tile:maxTile(),score:S.score,moves:S.moves,time:Date.now()-S.start,startTile:S.startTile||2,autoUsed:!!S.autoUsed,autoDepth:S.autoDepth||0,autoActualDepth:S.autoActualDepth||0,autoSolver:S.autoSolver||"",autoStrategy:S.autoStrategy||"",autoStrategiesUsed:[...(S.autoStrategiesUsed||[])],milestones:Object.keys(S.marks||{}).map(Number)});
   RUNS=RUNS.slice(0,100); save("runs",RUNS); renderHistory();
 }
 function fmtMilestoneTime(ms){

@@ -1,17 +1,18 @@
-# 2048++ v0.7.1
+# 2048++ v0.7.2 — Strategievergleich
 
-## Wechselbare AUTO-Strategien
-- Ausgewogen: Expectimax mit dem bisherigen Kompromiss aus freien Feldern, Ordnung, Merge-Chancen und Score.
-- Überleben: gewichtet freie Felder deutlich stärker; soll volle/gefährliche Boards vermeiden.
-- Ecke / Ordnung: gewichtet Corner-Bonus und Monotonie stärker; große Kacheln sollen stabiler in einer Ecke bleiben.
-- Punkte / Merge: aggressivere Bewertung unmittelbarer Merges und Punkte.
-- Schnell: reine 1-Zug-Heuristik ohne Expectimax; geringste Rechenlast.
+In der Spielhistorie gibt es jetzt einen eigenen AUTO-Strategievergleich.
 
-Die Expectimax-Tiefe 1–4 bleibt separat wählbar und gilt für alle Strategien außer „Schnell“.
+Je Strategie werden aus abgeschlossenen AUTO-Läufen berechnet:
+- Anzahl Läufe
+- 2048-Erfolgsquote
+- höchste erreichte Kachel
+- Median der maximal erreichten Kachel
+- durchschnittlicher Score
+- bester Score
+- durchschnittliche Anzahl Züge
 
-## AUTO-Button
-- Aktiv wieder im gewünschten Format: `AUTO 3× Ⅱ`.
-- Kein `E3` und kein kleines Rechteck mehr.
-- Bei „Schnell“ zeigt er `AUTO 1× Ⅱ`.
+Strategiewechsel während eines einzelnen AUTO-Laufs werden ab jetzt mitprotokolliert. Solche Läufe erscheinen separat als „Gemischt“, damit sie die Statistik einer einzelnen Strategie nicht verfälschen.
 
-Alle Strategien werden persistent gespeichert und können auch während eines laufenden AUTO-Spiels gewechselt werden.
+Ältere AUTO-Läufe, die vor der Einführung der Strategieaufzeichnung entstanden sind, erscheinen als „Früheres AUTO“.
+
+Die Detailzeile jedes neuen AUTO-Laufs zeigt außerdem Strategie und Rechentiefe.
