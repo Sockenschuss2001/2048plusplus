@@ -3,6 +3,9 @@ const load=(k,d)=>{try{return JSON.parse(localStorage.getItem(K+k))??d}catch{ret
 let CP=load("cp",{}),RUNS=load("runs",[]),REC=load("records",{bestScore:0,bestTile:0,fastest:{},fewest:{}}),PREF=localStorage.getItem("2048pp_preview")||"off";let THEME=localStorage.getItem("2048pp_theme")||"deepblue";
 let SLIDE=+(localStorage.getItem("2048pp_slide")||140);
 let NEXTLIMIT=+(localStorage.getItem("2048pp_nextlimit")||0);
+let AUTODELAY=+(localStorage.getItem("2048pp_autospeed")||100);
+let AUTO_RUNNING=false,AUTO_TIMER=0;
+window.AUTO_RUNNING=false;
 const clone=x=>JSON.parse(JSON.stringify(x));
 const ACTIVE_KEY=K+"active",ACTIVE_TTL=48*60*60*1000;
 let BACKGROUND_AT=0,RESUME_WAS_PAUSED=false;
@@ -52,13 +55,13 @@ function place(e,r,c,g){let p=g[r*4+c];e.style.left=p.x+"px";e.style.top=p.y+"px
 function renderBoard(){saveActive();let L=$("#tiles"),g=geom();L.innerHTML="";for(let r=0;r<4;r++)for(let c=0;c<4;c++){let q=S.b[r][c];if(!q.v)continue;let e=document.createElement("div");e.dataset.id=q.id;e.className=`tile ${q.v<=16384?"v"+q.v:"high"}`;e.textContent=q.v;place(e,r,c,g);L.appendChild(e)}stats()}
 function canMove(){for(let d of["L","R","U","D"])if(move(S,d))return true;return false}
 function scorePop(gain){if(!gain)return;let box=$("#score").parentElement,e=document.createElement("div");e.className="score-pop";e.textContent="+"+gain;box.appendChild(e);setTimeout(()=>e.remove(),700)}
-function showGameOver(){if(S.ended)return;S.ended=true;localStorage.removeItem(ACTIVE_KEY);finishRun();$("#gameover-score").textContent=`Score ${S.score} · ${S.moves} Züge`;$("#gameover").classList.remove("hidden");stats()}
-function animate(q){let old=new Map([...$("#tiles").children].map(x=>[+x.dataset.id,x])),g=geom();for(let m of q.anim){let e=old.get(m.id);if(!e)continue;if(m.merge){e.textContent=m.target;e.className=`tile ${m.target<=16384?"v"+m.target:"high"}`}place(e,m.r,m.c,g)}setTimeout(()=>{S=q.n;spawn(S);milestones();renderBoard();scorePop(q.gain);lock=0;if(!canMove())showGameOver()},SLIDE)}
+function showGameOver(){if(S.ended)return;stopAuto(false);S.ended=true;localStorage.removeItem(ACTIVE_KEY);finishRun();$("#gameover-score").textContent=`Score ${S.score} · ${S.moves} Züge`;$("#gameover").classList.remove("hidden");stats()}
+function animate(q){let old=new Map([...$("#tiles").children].map(x=>[+x.dataset.id,x])),g=geom();for(let m of q.anim){let e=old.get(m.id);if(!e)continue;if(m.merge){e.textContent=m.target;e.className=`tile ${m.target<=16384?"v"+m.target:"high"}`}place(e,m.r,m.c,g)}setTimeout(()=>{S=q.n;spawn(S);milestones();renderBoard();scorePop(q.gain);lock=0;if(!canMove())showGameOver();else autoSchedule()},SLIDE)}
 function maxTile(){return Math.max(...S.b.flat().map(x=>x.v))}
 function milestones(){let m=maxTile();for(let p=128;p<=m;p*=2)if(!S.marks[p]){let x={t:Date.now()-S.start,m:S.moves};S.marks[p]=x;S.undoCredits=(S.undoCredits||0)+1;CP[p]=clone(S);if(!REC.fastest[p]||x.t<REC.fastest[p])REC.fastest[p]=x.t;if(!REC.fewest[p]||x.m<REC.fewest[p])REC.fewest[p]=x.m;REC.bestTile=Math.max(REC.bestTile,p);save("cp",CP);save("records",REC)}
 if(S.marks&&S.marks[2048]&&!S.win2048Shown){S.win2048Shown=true;saveActive();setTimeout(show2048Win,Math.max(80,SLIDE||90))}}
 function go(d){if(lock)return;let q=move(S,d);if(!q)return;lock=1;H.push(clone(S));if(H.length>200)H.shift();animate(q)}
-window.undo=()=>{if(lock||!H.length||(S.undoCredits||0)<=0)return;let credits=S.undoCredits-1,marks=S.marks,ended=S.ended;S=H.pop();S.undoCredits=credits;S.marks=marks;S.ended=false;$("#gameover").classList.add("hidden");renderBoard()};window.newGame=()=>{hideResumePrompt();localStorage.removeItem(ACTIVE_KEY);if(PAUSED)setPaused(false);MENU_PAUSED=false;if(S&&S.moves>0&&!S.runSaved)finishRun();S=fresh();H=[];$("#gameover").classList.add("hidden");$("#panel").classList.add("hidden");renderBoard()}
+window.undo=()=>{if(lock||!H.length||(S.undoCredits||0)<=0)return;let credits=S.undoCredits-1,marks=S.marks,ended=S.ended;S=H.pop();S.undoCredits=credits;S.marks=marks;S.ended=false;$("#gameover").classList.add("hidden");renderBoard()};window.newGame=()=>{stopAuto(false);hideResumePrompt();localStorage.removeItem(ACTIVE_KEY);if(PAUSED)setPaused(false);MENU_PAUSED=false;if(S&&S.moves>0&&!S.runSaved)finishRun();S=fresh();H=[];$("#gameover").classList.add("hidden");$("#panel").classList.add("hidden");renderBoard()}
 function fmt(x){let s=x/1000|0,h=s/3600|0,m=(s%3600)/60|0,ss=s%60;return(h?h+":":"")+String(m).padStart(2,"0")+":"+String(ss).padStart(2,"0")}
 function preview(){let mode=$("#preview").value,free=empty(S.b).length;if(!NEXTLIMIT||free>NEXTLIMIT||mode=="off")return"";if(mode=="value"){let q=clone(S.rng);return"Nächster Wert: "+(rnd(q)<.9?2:4)}let out=[],sy={L:"←",R:"→",U:"↑",D:"↓"};for(let d of["L","R","U","D"]){let z=move(S,d);if(!z)continue;let e=empty(z.n.b),q=clone(z.n.rng),p=e[Math.floor(rnd(q)*e.length)],v=rnd(q)<.9?2:4;out.push(`${sy[d]} ${v} @ ${String.fromCharCode(65+p[1])}${p[0]+1}`)}return out.join(" · ")}
 function stats(){REC.bestScore=Math.max(REC.bestScore,S.score);REC.bestTile=Math.max(REC.bestTile,maxTile());save("records",REC);$("#score").textContent=S.score;$("#best").textContent=REC.bestScore;$("#moves").textContent=S.moves;let ub=$("#undoBtn"),uc=S.undoCredits||0;$("#undoCount").textContent=uc;ub.disabled=!H.length||uc<=0;$("#free").textContent=empty(S.b).length;let mx=maxTile(),g=128;while(g<=mx)g*=2;$("#goal").textContent=g;
@@ -66,7 +69,7 @@ let freeNow=empty(S.b).length, nextEnabled=NEXTLIMIT>0&&freeNow<=NEXTLIMIT;
 $("#nextCard").classList.toggle("hidden",NEXTLIMIT===0);
 $("#preview").disabled=!nextEnabled;
 $("#next").textContent=nextEnabled?preview():"";renderMilestones();renderHistory();renderCoach();let a=Object.entries(S.marks);$("#marks").innerHTML=a.length?a.map(([k,v])=>`<div class=r><b>${k}</b><span>${fmt(v.t)} · Zug ${v.m}</span></div>`).join(""):"Noch keine.";let c=Object.keys(CP).map(Number).sort((a,b)=>a-b);$("#cps").innerHTML=c.length?c.map(k=>`<div class=r><b>${k}</b><button onclick=startCP(${k})>Ab hier</button></div>`).join(""):"Noch keine.";$("#records").innerHTML=`<div class=r><b>Höchste Kachel</b><span>${REC.bestTile||"-"}</span></div><div class=r><b>Höchster Score</b><span>${REC.bestScore}</span></div>`;$("#runs").innerHTML=RUNS.length?RUNS.slice(0,12).map(r=>`<div class=r><b>${r.tile} · ${r.score}</b><span>${fmt(r.time)} · ${r.moves} Züge</span></div>`).join(""):"Noch keine abgeschlossenen Runs."}
-window.startCP=k=>{if(PAUSED)setPaused(false);if(S&&S.moves>0&&!S.runSaved)finishRun();S=clone(CP[k]);S.start=Date.now();S.startTile=+k;S.moves=0;S.score=0;S.marks={};S.undoCredits=0;S.ended=false;S.runSaved=false;S.win2048Shown=(+k>=2048);H=[];$("#gameover").classList.add("hidden");renderBoard()};
+window.startCP=k=>{stopAuto(false);if(PAUSED)setPaused(false);if(S&&S.moves>0&&!S.runSaved)finishRun();S=clone(CP[k]);S.start=Date.now();S.startTile=+k;S.moves=0;S.score=0;S.marks={};S.undoCredits=0;S.ended=false;S.runSaved=false;S.win2048Shown=(+k>=2048);H=[];$("#gameover").classList.add("hidden");renderBoard()};
 $("#gameover-new").onclick=()=>newGame();document.addEventListener("selectstart",e=>{if(!e.target.closest("input,textarea"))e.preventDefault()});document.addEventListener("contextmenu",e=>{if(e.target.closest("#game,header,nav,.stats,.next"))e.preventDefault()});
 
 
@@ -117,6 +120,37 @@ function coachEval(){
   }
   return out.sort((a,b)=>b.score-a.score);
 }
+
+function setAutoUi(){
+  let b=$("#autoBtn");if(!b)return;
+  b.classList.toggle("active",AUTO_RUNNING);
+  b.textContent=AUTO_RUNNING?"AUTO ■":"AUTO";
+}
+function stopAuto(update=true){
+  AUTO_RUNNING=false;window.AUTO_RUNNING=false;
+  clearTimeout(AUTO_TIMER);AUTO_TIMER=0;
+  if(update)setAutoUi();
+}
+function autoSchedule(){
+  clearTimeout(AUTO_TIMER);AUTO_TIMER=0;
+  if(!AUTO_RUNNING||PAUSED||lock||S.ended)return;
+  AUTO_TIMER=setTimeout(autoStep,AUTODELAY);
+}
+function autoStep(){
+  AUTO_TIMER=0;
+  if(!AUTO_RUNNING||PAUSED||lock||S.ended)return;
+  let a=coachEval();
+  if(!a.length){showGameOver();return}
+  S.autoUsed=true;
+  go(a[0].d);
+}
+function toggleAuto(){
+  if(AUTO_RUNNING){stopAuto();return}
+  if(S.ended)return;
+  AUTO_RUNNING=true;window.AUTO_RUNNING=true;S.autoUsed=true;
+  setAutoUi();saveActive();autoSchedule();
+}
+
 function renderCoach(){
   let card=$("#coachCard"),btn=$("#coachBtn");if(!card||!btn)return;
   btn.classList.toggle("active",COACH);card.classList.toggle("hidden",!COACH);
@@ -145,13 +179,13 @@ function renderHistory(){
   box.innerHTML=runs.length?runs.slice(0,20).map((r,i)=>`<div class="run-row">
     <div><b>${r.tile||2}</b><small>${fmtRunDate(r.ended||r.date||r.ts)}</small></div>
     <span>Score <b>${r.score||0}</b></span><span>${r.moves||0} Z.</span><span>${fmtRunTime(r.time)}</span>
-    <small>${(r.startTile||2)>2?"Checkpoint "+r.startTile:"Normal"}</small>
+    <small>${r.autoUsed?((r.startTile||2)>2?"AUTO · Checkpoint "+r.startTile:"AUTO") : ((r.startTile||2)>2?"Checkpoint "+r.startTile:"Normal")}</small>
   </div>`).join(""):`<div class="history-empty">Noch keine abgeschlossenen Spiele.</div>`;
 }
 function finishRun(){
   if(S.runSaved)return;
   S.runSaved=true;
-  RUNS.unshift({ended:Date.now(),tile:maxTile(),score:S.score,moves:S.moves,time:Date.now()-S.start,startTile:S.startTile||2,milestones:Object.keys(S.marks||{}).map(Number)});
+  RUNS.unshift({ended:Date.now(),tile:maxTile(),score:S.score,moves:S.moves,time:Date.now()-S.start,startTile:S.startTile||2,autoUsed:!!S.autoUsed,milestones:Object.keys(S.marks||{}).map(Number)});
   RUNS=RUNS.slice(0,100); save("runs",RUNS); renderHistory();
 }
 function fmtMilestoneTime(ms){
@@ -184,15 +218,18 @@ function setPaused(v){
   $("#pauseBtn").classList.toggle("active",PAUSED);
   $("#pauseBtn").textContent=PAUSED?"▶":"Ⅱ";
 }
-$("#pauseBtn").onclick=()=>setPaused(!PAUSED);
-$("#pauseOverlay").onclick=()=>setPaused(false);
+$("#pauseBtn").onclick=()=>{setPaused(!PAUSED);if(!PAUSED)autoSchedule()};
+$("#pauseOverlay").onclick=()=>{setPaused(false);autoSchedule()};
 $("#resetAll").onclick=()=>{if(confirm("Wirklich ALLES zurücksetzen?\n\nSpielhistorie, Rekorde, Checkpoints, Spielstand und Einstellungen werden gelöscht.")&&confirm("Letzte Bestätigung: Alle lokalen 2048++-Daten endgültig löschen?")){Object.keys(localStorage).filter(k=>k.startsWith("2048pp")).forEach(k=>localStorage.removeItem(k));location.reload()}};
 $("#clearHistory").onclick=()=>{if(confirm("Spielhistorie wirklich löschen?")){RUNS=[];save("runs",RUNS);renderHistory()}};
 $("#coachBtn").onclick=()=>{COACH=!COACH;localStorage.setItem("2048pp_coach",COACH?"1":"0");renderCoach()};
+$("#autoBtn").onclick=toggleAuto;
 $("#preview").value=["off","value","full"].includes(PREF)?PREF:"off";
 $("#slideSpeed").value=String([50,90,140,220].includes(SLIDE)?SLIDE:140);
+$("#autoSpeed").value=String([20,100,250,500].includes(AUTODELAY)?AUTODELAY:100);
 $("#nextLimit").value=String([0,4,6,8,16].includes(NEXTLIMIT)?NEXTLIMIT:0);
 $("#slideSpeed").onchange=e=>{SLIDE=+e.target.value;localStorage.setItem("2048pp_slide",SLIDE)};
+$("#autoSpeed").onchange=e=>{AUTODELAY=+e.target.value;localStorage.setItem("2048pp_autospeed",AUTODELAY);if(AUTO_RUNNING)autoSchedule()};
 $("#nextLimit").onchange=e=>{NEXTLIMIT=+e.target.value;localStorage.setItem("2048pp_nextlimit",NEXTLIMIT);stats()};$("#preview").onchange=e=>{localStorage.setItem("2048pp_preview",e.target.value);stats()};$("#menu").onclick=()=>{
   MENU_PAUSED=!PAUSED;
   if(MENU_PAUSED)setPaused(true);
@@ -202,7 +239,7 @@ $("#nextLimit").onchange=e=>{NEXTLIMIT=+e.target.value;localStorage.setItem("204
 };
 $("#close").onclick=()=>{
   $("#panel").classList.add("hidden");
-  if(MENU_PAUSED){MENU_PAUSED=false;setPaused(false)}
+  if(MENU_PAUSED){MENU_PAUSED=false;setPaused(false);autoSchedule()}
   else if(PAUSED)$("#pauseOverlay").classList.remove("hidden");
 };
 function autoIsRunning(){return !!(window.AUTO_RUNNING||window.AUTO_ACTIVE)}
@@ -237,7 +274,7 @@ document.addEventListener("visibilitychange",()=>{
 addEventListener("pagehide",saveActive);
 
 function setTheme(t){THEME=["blue","original","deepblue"].includes(t)?t:"deepblue";document.body.dataset.theme=THEME;localStorage.setItem("2048pp_theme",THEME);document.querySelectorAll(".theme-btn").forEach(b=>b.classList.toggle("active",b.dataset.theme===THEME))}
-setTheme(THEME);document.querySelectorAll(".theme-btn").forEach(b=>b.onclick=()=>setTheme(b.dataset.theme));
+setTheme(THEME);setAutoUi();document.querySelectorAll(".theme-btn").forEach(b=>b.onclick=()=>setTheme(b.dataset.theme));
 for(let i=0;i<16;i++){let e=document.createElement("div");e.className="cell";$("#grid").appendChild(e)}let x,y,G=$("#game"),SWIPE_OK=false;
 const swipeBlocked=t=>!!t.closest("button,select,input,textarea,#panel,.resume-prompt,.win2048");
 document.addEventListener("touchstart",e=>{if(PAUSED||e.touches.length!==1||swipeBlocked(e.target)){SWIPE_OK=false;return}SWIPE_OK=true;x=e.touches[0].clientX;y=e.touches[0].clientY},{passive:true});
@@ -247,8 +284,14 @@ if(ACTIVE&&ACTIVE.state&&ACTIVE.state.moves>0){
   S=ACTIVE.state;H=Array.isArray(ACTIVE.history)?ACTIVE.history:[];
   S.start=Date.now()-Math.max(0,+ACTIVE.elapsed||0);
   S.ended=false;S.runSaved=false;
+  AUTO_RUNNING=false;window.AUTO_RUNNING=false;
   syncIdFromState();
   requestAnimationFrame(()=>{renderBoard();showResumePrompt(false)});
 }else{
   S=fresh();H=[];requestAnimationFrame(renderBoard);
 }addEventListener("resize",()=>requestAnimationFrame(renderBoard));setInterval(()=>$("#time").textContent=fmt((PAUSED&&PAUSE_AT?PAUSE_AT:Date.now())-S.start),1000);if("serviceWorker"in navigator)navigator.serviceWorker.register("sw.js");
+async function requestPortraitLock(){
+  try{if(screen.orientation&&screen.orientation.lock)await screen.orientation.lock("portrait")}catch(e){}
+}
+requestPortraitLock();
+document.addEventListener("visibilitychange",()=>{if(!document.hidden)requestPortraitLock()});

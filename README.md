@@ -1,8 +1,14 @@
-# 2048++ v0.5.6
-- Wischgesten links/rechts/oben/unten auf der gesamten freien App-Fläche, auch unterhalb des Spielfelds.
-- Buttons, Selects, Menü und Dialoge sind von der globalen Gestenerkennung ausgenommen.
-- Beim erstmaligen Erreichen von 2048 erscheint: „Hurra! Du hast die Kachel 2048 erreicht.“ mit Weitermachen / Neues Spiel.
-- Der Dialog pausiert das manuelle Spiel.
-- Pro Lauf erscheint er höchstens einmal.
-- Ein Start ab einem 2048+-Checkpoint löst ihn nicht erneut aus.
-- Für AUTO ist die 2048-Einblendung so vorbereitet, dass sie bei aktivem Automatiklauf übersprungen wird.
+# 2048++ v0.6.0
+
+Erster funktionaler AUTO-Modus.
+
+- AUTO spielt selbständig mit derselben Bewertungslogik wie COACH.
+- AUTO-Button startet/stoppt den Automatiklauf; aktiver Zustand wird deutlich markiert.
+- Einstellbares AUTO-Tempo: Turbo, Schnell, Normal, Langsam.
+- Slide-Geschwindigkeit und AUTO-Denkpause bleiben getrennte Einstellungen.
+- Die 2048-Glückwunschmeldung wird im AUTO-Modus automatisch übersprungen.
+- Manuelle Pause und Menü pausieren AUTO; danach wird derselbe AUTO-Lauf fortgesetzt.
+- Bei Game Over stoppt AUTO automatisch.
+- Spielhistorie kennzeichnet AUTO-Läufe.
+- Nach Wiederherstellung aus Hintergrund/48h-Cache wird AUTO aus Sicherheitsgründen nicht automatisch gestartet; der Spielstand bleibt erhalten.
+- AUTO nutzt zunächst bewusst nur die vorhandene einzügige COACH-Heuristik. Das schafft eine messbare Basis für spätere Lookahead-/Solver-Versionen.
